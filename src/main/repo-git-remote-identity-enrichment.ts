@@ -174,6 +174,7 @@ async function enrichRepoGitRemoteIdentity(store: RepoIdentityStore, repo: Repo)
     }
     const result = await probeGitRemoteIdentity(repo.path, hostId, {
       signal: controller.signal,
+      admissionTier: 'background',
       ...git
     })
     // Aborted probes resolve as unavailable; prevent retired probes from re-seeding deadlines.
