@@ -1,23 +1,17 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-type RunningListener = (distros: readonly string[]) => void
-type StoppedListener = (stopped: string[], running: string[]) => void
-const listeners = vi.hoisted(() => {
-  const running: RunningListener[] = []
-  const stopped: StoppedListener[] = []
-  return { running, stopped }
-})
-vi.mock('../wsl-running-distro-cache', () => ({
-  onConfirmedRunningWslDistros: (listener: (distros: readonly string[]) => void) => {
-    listeners.running.push(listener)
-    return () => {}
-  },
-  onRunningWslDistrosStopped: (listener: (stopped: string[], running: string[]) => void) => {
-    listeners.stopped.push(listener)
-    return () => {}
-  }
-}))
+// The gate's running reads go through wsl.exe; these tests feed the cache their own lists.
+vi.mock('../wsl', () => ({ listRunningWslDistrosAsync: vi.fn(), listWslDistrosAsync: vi.fn() }))
 
+import {
+  _resetWslBackgroundDistroGateForTests,
+  noteWslDistroMayHaveStopped,
+  WSL_STOP_SETTLE_MS
+} from '../wsl-background-distro-gate'
+import {
+  _resetRunningWslDistroCacheForTests,
+  resolveRunningWslDistros
+} from '../wsl-running-distro-cache'
 import {
   followWslAutomountRoots,
   knownWslAutomountRoots,
@@ -26,10 +20,30 @@ import {
   resetWslAutomountRootsForTests
 } from './wsl-automount-root'
 
+let now = 1_000
+const unfollows: (() => void)[] = []
+
+function follow(read: (distro: string) => Promise<string | null>): void {
+  unfollows.push(followWslAutomountRoots(() => ['Ubuntu'], read))
+}
+
+/** One confirmed running-distro list, probed at the current test clock. */
+async function listRunning(distros: string[]): Promise<void> {
+  await resolveRunningWslDistros(async () => distros)
+}
+
+beforeEach(() => {
+  now = 1_000
+  vi.spyOn(performance, 'now').mockImplementation(() => now)
+})
+
 afterEach(() => {
+  // The real cache keeps its listeners across tests.
+  unfollows.splice(0).forEach((unfollow) => unfollow())
   resetWslAutomountRootsForTests()
-  listeners.running.length = 0
-  listeners.stopped.length = 0
+  _resetWslBackgroundDistroGateForTests()
+  _resetRunningWslDistroCacheForTests()
+  vi.restoreAllMocks()
 })
 
 describe('parseWslAutomountRoot', () => {
@@ -49,23 +63,37 @@ describe('followWslAutomountRoots', () => {
     const read = vi.fn(async () => '/')
     const changed = vi.fn()
     onWslAutomountRootsChanged(changed)
-    followWslAutomountRoots(() => ['Ubuntu'], read)
-    listeners.running[0](['Ubuntu', 'Debian'])
+    follow(read)
+    await listRunning(['Ubuntu', 'Debian'])
     await vi.waitFor(() => expect(knownWslAutomountRoots()).toEqual(['/mnt/', '/']))
     // Only the project distros, and only once while it runs.
-    listeners.running[0](['Ubuntu'])
+    await listRunning(['Ubuntu'])
     expect(read).toHaveBeenCalledExactlyOnceWith('Ubuntu')
     expect(changed).toHaveBeenCalledOnce()
-    listeners.stopped[0](['Ubuntu'], [])
+    await listRunning([])
     expect(knownWslAutomountRoots()).toEqual(['/mnt/'])
-    listeners.running[0](['Ubuntu'])
+    await listRunning(['Ubuntu'])
     await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2))
+  })
+
+  it('never reads from a list probed while the distro was still stopping, only from a settled one', async () => {
+    const read = vi.fn(async () => '/')
+    follow(read)
+    noteWslDistroMayHaveStopped('Ubuntu')
+    // wsl.exe still lists a terminating distro; reading its root now would boot it again.
+    now += WSL_STOP_SETTLE_MS - 1
+    await listRunning(['Ubuntu'])
+    expect(read).not.toHaveBeenCalled()
+
+    now += 1
+    await listRunning(['Ubuntu'])
+    expect(read).toHaveBeenCalledExactlyOnceWith('Ubuntu')
   })
 
   it('keeps the default root when a distro cannot be read', async () => {
     const read = vi.fn(async () => null)
-    followWslAutomountRoots(() => ['Ubuntu'], read)
-    listeners.running[0](['Ubuntu'])
+    follow(read)
+    await listRunning(['Ubuntu'])
     await vi.waitFor(() => expect(read).toHaveBeenCalled())
     expect(knownWslAutomountRoots()).toEqual(['/mnt/'])
   })

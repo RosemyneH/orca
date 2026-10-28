@@ -1,12 +1,13 @@
 /**
  * Where each WSL project's distro mounts Windows drives (`[automount] root`, `/mnt/` by default),
  * so a worktree link WSL Git wrote as `<root>c/src/app/.git/worktrees/x` maps back to `C:\…`.
- * Read only from a distro already confirmed running, never waking a stopped one, and read again
- * after it stops, since `wsl.conf` changes take effect on the next start.
+ * Read only from a distro confirmed running after any stop settled, never waking a stopped one,
+ * and read again after it stops, since `wsl.conf` changes take effect on the next start.
  */
 import { runProcess } from '@orca/process-host'
 import { buildPosixStdoutFence } from '../../shared/posix-stdout-fence'
 import { buildWslExecArgs } from '../../shared/wsl-login-shell-command'
+import { wasWslDistroLastSeenRunningSettled } from '../wsl-background-distro-gate'
 import { resolveWslInteropSpawnCwd } from '../wsl-interop-spawn-directory'
 import {
   onConfirmedRunningWslDistros,
@@ -57,6 +58,11 @@ export function followWslAutomountRoots(
     for (const distro of running) {
       const key = distroKey(distro)
       if (!wantedKeys.has(key) || roots.has(key) || pending.has(key)) {
+        continue
+      }
+      // A list probed mid-stop still names the distro, and wsl.exe would boot it again. The cache
+      // stores this list before notifying, so this judges it; a later settled list reads.
+      if (!wasWslDistroLastSeenRunningSettled(distro)) {
         continue
       }
       pending.add(key)
