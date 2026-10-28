@@ -102,6 +102,7 @@ test('a journaled conversion reopens a UNC drive project at its drive path', asy
       version: 1,
       migrationId: 'conversion-e2e',
       distro: 'Ubuntu',
+      profileId: null,
       repoIds: ['repo-unc'],
       folderWorkspaceIds: [],
       rootPaths: [UNC],
