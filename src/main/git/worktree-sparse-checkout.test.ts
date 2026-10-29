@@ -56,6 +56,33 @@ describe('sparse-checkout detection', () => {
   )
 
   it.skipIf(process.platform === 'win32')(
+    'reports numeric sparse-checkout booleans accepted by Git',
+    async () => {
+      const repoPath = await createRepoWithTwoDirs()
+
+      git(repoPath, ['sparse-checkout', 'set', 'keep'])
+      git(repoPath, ['config', '--worktree', 'core.sparseCheckout', '2'])
+
+      expect(git(repoPath, ['config', '--bool', 'core.sparseCheckout']).trim()).toBe('true')
+      expect(mainWorktree(await listWorktrees(repoPath)).isSparse).toBe(true)
+    }
+  )
+
+  it.skipIf(process.platform === 'win32')(
+    'honors a numeric worktree-config extension flag accepted by Git',
+    async () => {
+      const repoPath = await createRepoWithTwoDirs()
+
+      git(repoPath, ['sparse-checkout', 'set', 'keep'])
+      git(repoPath, ['config', 'extensions.worktreeConfig', '2'])
+      git(repoPath, ['config', 'core.sparseCheckout', 'false'])
+
+      expect(git(repoPath, ['config', '--bool', 'core.sparseCheckout']).trim()).toBe('true')
+      expect(mainWorktree(await listWorktrees(repoPath)).isSparse).toBe(true)
+    }
+  )
+
+  it.skipIf(process.platform === 'win32')(
     'does not report isSparse after disable leaves the pattern file behind',
     async () => {
       const repoPath = await createRepoWithTwoDirs()
@@ -116,6 +143,10 @@ describe('sparse-checkout cache invalidation across the worktree lifecycle', () 
       const linkedPath = path.join(path.dirname(repoPath), 'linked')
 
       git(repoPath, ['worktree', 'add', '-b', 'sparse-branch', linkedPath])
+      // Older Git needs the linked gitdir's info directory before writing sparse patterns.
+      await mkdir(path.join(git(linkedPath, ['rev-parse', '--git-dir']).trim(), 'info'), {
+        recursive: true
+      })
       git(linkedPath, ['sparse-checkout', 'set', 'keep'])
 
       const beforeRemoval = await listWorktrees(repoPath)
@@ -160,6 +191,20 @@ describe('parseCoreSparseCheckoutFlag', () => {
   it('treats a valueless boolean as true', () => {
     expect(parseCoreSparseCheckoutFlag('[core]\n\tsparseCheckout\n')).toBe(true)
   })
+
+  it.each(['2', '-1', '+2', '01', '0x10', '1k', '-2M', '1G', '2147483647', '"2"', '" 2"'])(
+    'reads the nonzero numeric boolean %s',
+    (value) => {
+      expect(parseCoreSparseCheckoutFlag(`[core]\nsparseCheckout = ${value}\n`)).toBe(true)
+    }
+  )
+
+  it.each(['0', '-0', '00', '0x0', '0k', '08', '1.0', '2junk', '2147483648', '2g'])(
+    'keeps zero or invalid numeric boolean %s non-sparse',
+    (value) => {
+      expect(parseCoreSparseCheckoutFlag(`[core]\nsparseCheckout = ${value}\n`)).toBe(false)
+    }
+  )
 
   it('ignores a [core "subsection"] header', () => {
     expect(parseCoreSparseCheckoutFlag('[core "sub"]\n\tsparseCheckout = true\n')).toBeUndefined()

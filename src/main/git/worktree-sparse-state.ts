@@ -107,7 +107,7 @@ function stripGitConfigComment(line: string): string {
   return line
 }
 
-// Valueless booleans are true; explicit values accept Git's true/yes/on/1 forms.
+// Git also accepts signed integers with C-style bases and k/m/g units.
 function parseGitConfigBoolean(raw: string | undefined): boolean {
   if (raw === undefined) {
     return true
@@ -116,5 +116,17 @@ function parseGitConfigBoolean(raw: string | undefined): boolean {
     .trim()
     .replace(/^"(.*)"$/, '$1')
     .toLowerCase()
-  return value === 'true' || value === 'yes' || value === 'on' || value === '1'
+  if (value === 'true' || value === 'yes' || value === 'on') {
+    return true
+  }
+  const numeric = value.match(/^[ \t\r\n\v\f]*[+-]?(0x[0-9a-f]+|0[0-7]*|[1-9][0-9]*)([kmg]?)$/)
+  if (!numeric) {
+    return false
+  }
+  const digits = numeric[1]
+  const radix = digits.startsWith('0x') ? 16 : digits.startsWith('0') ? 8 : 10
+  const exponent = ['', 'k', 'm', 'g'].indexOf(numeric[2])
+  const magnitude = Number.parseInt(digits, radix) * 1024 ** exponent
+  // Git 2.25 rejects the extra negative endpoint accepted by newer Git.
+  return magnitude > 0 && magnitude <= 2_147_483_647
 }
