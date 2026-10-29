@@ -259,7 +259,7 @@ describe('directory upload pipeline', () => {
     }
   })
 
-  it('stops admission and closes local handles on abort', async () => {
+  it('stops admission and closes local handles on abort', { repeats: 200 }, async () => {
     const dir = await mkdtemp(join(tmpdir(), 'orca-sftp-pipeline-'))
     const fixture = uploadSession({ stalledCloses: true })
     const controller = new AbortController()
@@ -274,6 +274,13 @@ describe('directory upload pipeline', () => {
       controller.abort()
 
       expect(await outcome).toMatchObject({ name: 'AbortError', sshChannelCloseConfirmed: true })
+      // TEMP evidence: how often the old immediate check would have seen fds still closing.
+      if (process.platform === 'linux') {
+        const immediate = await openLocalFiles(dir)
+        if (immediate.length > 0) {
+          console.log(`TEMP-STRAGGLERS ${immediate.length}`)
+        }
+      }
       expect(fixture.opened).toHaveLength(4)
       await expectLocalFilesClosed(dir)
     } finally {
