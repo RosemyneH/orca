@@ -101,6 +101,10 @@ export const usePluginPanelsStore = create<PluginPanelsState>()((set) => ({
   },
   setPanelHealth: (tabKey, health) => {
     set((state) => {
+      // Why: sidebar badges subscribe to this map; an unchanged health must keep its identity.
+      if ((health === 'error') === (state.panelErrors[tabKey] === true)) {
+        return state
+      }
       const panelErrors = { ...state.panelErrors }
       if (health === 'error') {
         panelErrors[tabKey] = true
@@ -117,9 +121,13 @@ function retainInstalledPanelErrors(
   plugins: readonly PluginHostListEntry[]
 ): Record<string, true> {
   const installed = collectInstalledPluginTabKeys(plugins)
-  return Object.fromEntries(
-    Object.entries(panelErrors).filter(([tabKey]) => installed.has(tabKey))
-  ) as Record<string, true>
+  const kept: Record<string, true> = {}
+  for (const tabKey of Object.keys(panelErrors)) {
+    if (installed.has(tabKey)) {
+      kept[tabKey] = true
+    }
+  }
+  return kept
 }
 
 let changeSubscriptionStarted = false
