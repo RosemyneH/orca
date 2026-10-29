@@ -5,6 +5,7 @@ import { SettingsSegmentedControl } from '@/components/settings/SettingsFormCont
 import { useResetCountdownClock } from '@/hooks/useResetCountdownClock'
 import { translate } from '@/i18n/i18n'
 import { formatRateLimitWindowChipLabel, formatWindowLabel } from '@/lib/window-label-formatter'
+import { formatIncludedTokenSuffix } from '../../../../shared/compact-token-count'
 import { CURSOR_MODELS_BUCKET_NAME } from '../../../../shared/cursor-usage-buckets'
 import type { ProviderRateLimits, RateLimitWindow } from '../../../../shared/rate-limit-types'
 import {
@@ -114,7 +115,9 @@ function UsageMetric({
           />
         </span>
       ) : null}
-      <span className={`tabular-nums text-[11px] ${usageTextColorClass(used)}`}>{shown}%</span>
+      <span className={`tabular-nums text-[11px] ${usageTextColorClass(used)}`}>
+        {shown}%{formatIncludedTokenSuffix(section.window.includedTokens)}
+      </span>
     </span>
   )
 }

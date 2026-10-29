@@ -232,6 +232,44 @@ describe('fetchCursorRateLimits', () => {
     expect(limits.usageMetadata?.failureKind).toBe('usage-unavailable')
   })
 
+  it('attaches the billing-window token total without dropping quota when that read fails', async () => {
+    vi.useFakeTimers({ now: Date.parse('2026-10-29T05:00:00Z') })
+    try {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse(SUMMARY))
+        .mockResolvedValueOnce(
+          jsonResponse({ totalIncludedTokens: 278_000_000, totalTokens: 300_000_000 })
+        )
+      const limits = await fetchCursorRateLimits({ authReadResult: session() })
+      expect(
+        limits.buckets?.find((bucket) => bucket.name === 'Cursor Models')?.includedTokens
+      ).toBe(278_000_000)
+      expect(
+        limits.buckets?.find((bucket) => bucket.name === 'Other Models')?.includedTokens
+      ).toBeUndefined()
+      const [url, init] = fetchMock.mock.calls[1] ?? []
+      expect(url).toBe('https://cursor.com/api/dashboard/v2/query-daily-usage')
+      expect(JSON.parse(String(init?.body))).toEqual({
+        scope: 'user',
+        startTime: '2026-09-01T00:00:00.000Z',
+        endTime: '2026-10-01T00:00:00.000Z',
+        groupBy: ['usageType']
+      })
+
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse(SUMMARY))
+        .mockRejectedValueOnce(new Error('daily'))
+      const still = await fetchCursorRateLimits({ authReadResult: session() })
+      expect(still.status).toBe('ok')
+      expect(still.monthly?.usedPercent).toBe(50)
+      expect(
+        still.buckets?.find((bucket) => bucket.name === 'Cursor Models')?.includedTokens
+      ).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('reports a network failure without leaking the request internals', async () => {
     fetchMock.mockRejectedValueOnce(new Error('getaddrinfo ENOTFOUND cursor.com'))
     const limits = await fetchCursorRateLimits({ authReadResult: session() })

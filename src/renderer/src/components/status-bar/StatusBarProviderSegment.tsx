@@ -10,6 +10,7 @@ import {
   type UsagePercentageDisplay
 } from '../../../../shared/usage-percentage-display'
 import type { StatusBarUsageMode } from '../../../../shared/status-bar-usage-mode'
+import { formatIncludedTokenSuffix } from '../../../../shared/compact-token-count'
 import { formatCurrencyAmount } from '../../../../shared/currency-format'
 import { formatCreditCount } from '../../../../shared/credit-count-format'
 import {
@@ -70,7 +71,7 @@ function WindowLabel({
   return (
     <span className="tabular-nums">
       {showLabel && labelFirst ? `${label} ` : ''}
-      {formatBareUsagePercentage(w.usedPercent, display)}
+      {`${formatBareUsagePercentage(w.usedPercent, display)}${formatIncludedTokenSuffix(w.includedTokens)}`}
       {showLabel && !labelFirst ? ` ${label}` : ''}
     </span>
   )

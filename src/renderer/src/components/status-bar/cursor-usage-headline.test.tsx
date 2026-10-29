@@ -73,6 +73,24 @@ describe('Cursor compact usage headline', () => {
     }
   })
 
+  it('shows included tokens beside the compact Cursor Models row', () => {
+    const p = cursorPools(9, 18)
+    p.buckets = p.buckets?.map((bucket) =>
+      bucket.name === 'Cursor Models' ? { ...bucket, includedTokens: 278_000_000 } : bucket
+    )
+    const row = renderToStaticMarkup(
+      <UsageRow
+        p={p}
+        mode="compact"
+        display="used"
+        state={{ kind: 'usage', statusLabel: null }}
+        showSignInAction={false}
+        now={0}
+      />
+    )
+    expect(row).toContain('9% · 278M')
+  })
+
   it.each(['Other Models', 'On-demand'] as const)(
     'keeps exhausted %s urgent in overflow and collapse decisions',
     (bucket) => {

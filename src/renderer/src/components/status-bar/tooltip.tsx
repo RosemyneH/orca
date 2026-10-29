@@ -1,4 +1,5 @@
 import type { ProviderRateLimits, RateLimitWindow } from '../../../../shared/rate-limit-types'
+import { formatIncludedTokenSuffix } from '../../../../shared/compact-token-count'
 import {
   formatResetCountdown,
   formatResetDuration
@@ -231,7 +232,9 @@ function ProviderRateLimitWindowSection({
         />
       </div>
       <div className={`flex justify-between ${mutedClass}`}>
-        <span>{formatUsagePercentageLabel(usedPct, usagePercentageDisplay)}</span>
+        <span>
+          {`${formatUsagePercentageLabel(usedPct, usagePercentageDisplay)}${formatIncludedTokenSuffix(window.includedTokens)}`}
+        </span>
         {resetLabel && <span>{resetLabel}</span>}
       </div>
     </div>

@@ -6,6 +6,7 @@ import type { CursorAuthReadResult } from './cursor-auth'
 const fetchMock = vi.fn<typeof fetch>()
 const SUMMARY_URL = 'https://cursor.com/api/usage-summary'
 const CURRENT_PERIOD_URL = 'https://cursor.com/api/dashboard/get-current-period-usage'
+const DAILY_USAGE_URL = 'https://cursor.com/api/dashboard/v2/query-daily-usage'
 const START = '2026-10-18T06:32:13.504Z'
 const END = '2026-10-25T06:32:13.504Z'
 const PERCENT = 1.112013719649788
@@ -56,6 +57,9 @@ function respond(current: unknown = CURRENT, summary: unknown = SUMMARY): void {
     if (url === CURRENT_PERIOD_URL) {
       return Response.json(current)
     }
+    if (url === DAILY_USAGE_URL) {
+      return Response.json({})
+    }
     throw new Error('Unexpected request')
   })
 }
@@ -85,7 +89,7 @@ describe('Cursor Unified Ultra current-period usage', () => {
       resetsAt: Date.parse(END)
     })
     expect(limits.usageMetadata).toMatchObject({ source: 'cli', credentialSource: 'keychain' })
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
     const summaryRequest = fetchMock.mock.calls.find(([url]) => url === SUMMARY_URL)?.[1]
     const currentRequest = fetchMock.mock.calls.find(([url]) => url === CURRENT_PERIOD_URL)?.[1]
     expect(currentRequest).toMatchObject({
@@ -216,13 +220,13 @@ describe('Cursor Unified Ultra current-period usage', () => {
     expect(limits.monthly).toBeUndefined()
   })
 
-  it('keeps an active non-unified plan on the summary without the extra request', async () => {
+  it('keeps an active non-unified plan on the summary without the current-period request', async () => {
     const plan = { ...SUMMARY.individualUsage.plan, totalPercentUsed: 12, autoPercentUsed: 12 }
     respond(CURRENT, { ...SUMMARY, membershipType: 'pro', individualUsage: { plan } })
     const limits = await fetchCursorRateLimits({ authReadResult: AUTH })
     expect(limits.planType).toBe('pro')
     expect(limits.monthly?.resetsAt).toBe(Date.parse(SUMMARY.billingCycleEnd))
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([SUMMARY_URL, DAILY_USAGE_URL])
   })
 
   it('keeps an unlimited non-unified plan barless without the extra request', async () => {
@@ -276,7 +280,7 @@ describe('Cursor Unified Ultra current-period usage', () => {
         usedPercent: 0,
         resetsAt: Date.parse(SUMMARY.billingCycleEnd)
       })
-      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(fetchMock).toHaveBeenCalledTimes(3)
     }
   )
 })

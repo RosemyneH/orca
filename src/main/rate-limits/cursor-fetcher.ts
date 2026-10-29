@@ -7,6 +7,7 @@ import {
   type CursorAuthReadResult,
   type CursorAuthSession
 } from './cursor-auth'
+import { attachCursorIncludedTokens } from './cursor-included-tokens'
 import { cursorSessionCookie, isCursorSessionTokenExpired } from './cursor-session-token'
 import {
   mapCursorCurrentPeriodUsage,
@@ -248,15 +249,19 @@ export async function fetchCursorRateLimits(
       }
       if (current.kind === 'usage') {
         const period = current.usage
-        return result('ok', null, {
-          ...(period.monthly ? { monthly: period.monthly } : {}),
-          buckets: [
-            ...period.buckets,
-            ...mapped.buckets.filter((bucket) => bucket.name === CURSOR_ON_DEMAND_BUCKET_NAME)
-          ],
-          planType: mapped.planType,
-          usageMetadata: metadata
-        })
+        return attachCursorIncludedTokens(
+          session,
+          result('ok', null, {
+            ...(period.monthly ? { monthly: period.monthly } : {}),
+            buckets: [
+              ...period.buckets,
+              ...mapped.buckets.filter((bucket) => bucket.name === CURSOR_ON_DEMAND_BUCKET_NAME)
+            ],
+            planType: mapped.planType,
+            usageMetadata: metadata
+          }),
+          options.signal
+        )
       }
     }
 
@@ -265,12 +270,16 @@ export async function fetchCursorRateLimits(
       return result('ok', null, { planType: mapped.planType, usageMetadata: metadata })
     }
     if (mapped.monthly || mapped.buckets.length > 0) {
-      return result('ok', null, {
-        ...(mapped.monthly ? { monthly: mapped.monthly } : {}),
-        ...(mapped.buckets.length > 0 ? { buckets: mapped.buckets } : {}),
-        planType: mapped.planType,
-        usageMetadata: metadata
-      })
+      return attachCursorIncludedTokens(
+        session,
+        result('ok', null, {
+          ...(mapped.monthly ? { monthly: mapped.monthly } : {}),
+          ...(mapped.buckets.length > 0 ? { buckets: mapped.buckets } : {}),
+          planType: mapped.planType,
+          usageMetadata: metadata
+        }),
+        options.signal
+      )
     }
 
     // Older request-quota plans lack individualUsage; try per-model quotas before declaring no allowance.
@@ -284,11 +293,15 @@ export async function fetchCursorRateLimits(
     }
     const legacyWindow = mapCursorLegacyRequestQuota(legacy.data)
     if (legacyWindow) {
-      return result('ok', null, {
-        monthly: legacyWindow,
-        planType: mapped.planType,
-        usageMetadata: metadata
-      })
+      return attachCursorIncludedTokens(
+        session,
+        result('ok', null, {
+          monthly: legacyWindow,
+          planType: mapped.planType,
+          usageMetadata: metadata
+        }),
+        options.signal
+      )
     }
 
     // Successful allowance-free plans are unavailable, not permanently failing; hide their bar.

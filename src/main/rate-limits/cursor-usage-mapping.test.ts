@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  mapCursorIncludedTokens,
   mapCursorLegacyRequestQuota,
   mapCursorUsageSummary,
   parseCursorUsageSummary
@@ -204,5 +205,21 @@ describe('mapCursorLegacyRequestQuota', () => {
       mapCursorLegacyRequestQuota({ free: { numRequests: 3, maxRequestUsage: null } })
     ).toBeNull()
     expect(mapCursorLegacyRequestQuota(null)).toBeNull()
+  })
+})
+
+describe('mapCursorIncludedTokens', () => {
+  it('prefers a positive included total and falls back to the overall total', () => {
+    expect(mapCursorIncludedTokens({ totalIncludedTokens: 278_000_000, totalTokens: 300 })).toBe(
+      278_000_000
+    )
+    expect(mapCursorIncludedTokens({ totalIncludedTokens: '0', totalTokens: 12 })).toBe(12)
+    expect(mapCursorIncludedTokens({ totalIncludedTokens: 'nope', totalTokens: '15.6' })).toBe(16)
+  })
+
+  it('hides missing and empty totals', () => {
+    expect(mapCursorIncludedTokens({})).toBeNull()
+    expect(mapCursorIncludedTokens({ totalIncludedTokens: 0, totalTokens: 0 })).toBeNull()
+    expect(mapCursorIncludedTokens(null)).toBeNull()
   })
 })

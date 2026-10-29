@@ -216,6 +216,28 @@ const legacyBucketSchema = z
 
 const legacyQuotaSchema = z.record(z.string(), z.union([legacyBucketSchema, z.unknown()]))
 
+const dailyUsageSchema = z
+  .object({
+    totalIncludedTokens: z.unknown(),
+    totalTokens: z.unknown()
+  })
+  .partial()
+
+/** Included-token total for the billing window; missing or empty counts stay hidden. */
+export function mapCursorIncludedTokens(payload: unknown): number | null {
+  const parsed = dailyUsageSchema.safeParse(payload)
+  if (!parsed.success) {
+    return null
+  }
+  const included = finiteNumber(parsed.data.totalIncludedTokens)
+  const tokens =
+    included !== null && included > 0 ? included : finiteNumber(parsed.data.totalTokens)
+  if (tokens === null || tokens <= 0) {
+    return null
+  }
+  return Math.round(tokens)
+}
+
 /** Older plans meter per-model requests instead of currency allowance. */
 export function mapCursorLegacyRequestQuota(payload: unknown): RateLimitWindow | null {
   const parsed = legacyQuotaSchema.safeParse(payload)

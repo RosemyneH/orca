@@ -60,6 +60,26 @@ describe('Cursor status-bar segment', () => {
     expect(markup).toContain('50%')
   })
 
+  it('shows the included token total beside the Cursor Models percent', async () => {
+    const { ProviderSegment } = await import('./StatusBar')
+    const buckets = cursorLimits().buckets?.map((bucket) =>
+      bucket.name === CURSOR_MODELS_BUCKET_NAME
+        ? { ...bucket, includedTokens: 278_000_000 }
+        : bucket
+    )
+    const markup = renderToStaticMarkup(
+      <ProviderSegment
+        p={cursorLimits({ buckets })}
+        compact={false}
+        display="used"
+        mode="verbose"
+      />
+    )
+    expect(markup).toContain('Cursor Models 45% · 278M')
+    expect(markup).toContain('Other Models 50%')
+    expect(markup).not.toContain('Other Models 50% ·')
+  })
+
   it('falls back to the plan total when no bucket is renderable', async () => {
     const { ProviderSegment } = await import('./StatusBar')
     const markup = renderToStaticMarkup(
