@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '@/store'
-import { getConnectionId } from '@/lib/connection-context'
+import { getConnectionId, getConnectionIdFromState } from '@/lib/connection-context'
+import { formatClipboardFilePath } from '@/lib/clipboard-file-path'
+import { getWorkspaceFileRevealOwner } from '@/lib/reveal-in-file-manager'
 import { detectLanguage } from '@/lib/language-detect'
 import { canShowWorkspaceFileBrowserAction, openFilePreviewToSide } from '@/lib/file-preview'
 import { getEditorHeaderCopyState } from './editor-header'
@@ -196,7 +198,13 @@ function EditorPanelInner({
       return
     }
     try {
-      await window.api.ui.writeClipboardText(copyState.copyText)
+      const state = useAppStore.getState()
+      const owner = getWorkspaceFileRevealOwner(state, activeFile.worktreeId, {
+        connectionId:
+          activeFile.externalSshTargetId ?? getConnectionIdFromState(state, activeFile.worktreeId),
+        runtimeEnvironmentId: activeFile.runtimeEnvironmentId
+      })
+      await window.api.ui.writeClipboardText(formatClipboardFilePath(copyState.copyText, owner))
       if (!pathCopyMountedRef.current) {
         return
       }
