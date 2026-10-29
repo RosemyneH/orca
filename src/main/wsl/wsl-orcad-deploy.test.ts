@@ -32,7 +32,8 @@ vi.mock('../managed-server/activation/orcad-activation-transaction-store', () =>
   readOrcadActivationTransaction: mocks.transaction
 }))
 vi.mock('../managed-server/activation/orcad-activation-record-store', () => ({
-  readOrcadActivationRecord: mocks.readRecord
+  readOrcadActivationRecord: mocks.readRecord,
+  orcadActivationPath: (_host: unknown, home: string) => `${home}/.orca-remote/orcad-active.json`
 }))
 vi.mock('../managed-server/install/remote-versioned-install', async (importOriginal) => ({
   ...(await importOriginal<typeof RemoteVersionedInstall>()),
@@ -58,6 +59,7 @@ vi.mock('../orcad/orcad-artifact-materializer', () => ({
 }))
 vi.mock('../ssh/orcad-remote-deploy', () => ({ deployOrcad: mocks.deploy }))
 vi.mock('../managed-server/lifecycle/orcad-managed-version-gc', () => ({
+  provenLiveDaemonVersion: () => null,
   pruneManagedOrcadVersions: mocks.prune
 }))
 vi.mock('../managed-server/lifecycle/orcad-managed-wake', () => ({
@@ -68,7 +70,7 @@ vi.mock('../managed-server/lifecycle/orcad-managed-runtime-context', async (impo
   probeManagedOrcadReadiness: mocks.probe
 }))
 
-import { deployAndLaunchWslOrcad, isWsl1KernelRelease } from './wsl-orcad-deploy'
+import { deployAndLaunchWslOrcad } from './wsl-orcad-deploy'
 import { resetOrcadUpdateFailuresForTests } from '../managed-server/lifecycle/orcad-managed-update-failure-memory'
 
 beforeEach(() => resetOrcadUpdateFailuresForTests())
@@ -107,11 +109,12 @@ function transport(target: WslOrcadHostTarget): OrcadHostTransport {
 
 function launch(kernel = '5.15.167.4-microsoft-standard-WSL2', options = {}) {
   mocks.exec.mockImplementation(async (_conn: unknown, command: string) => {
-    if (command === 'uname -r') {
+    if (command.includes('uname -r')) {
       mocks.steps.push('uname')
-      return `${kernel}\n`
+      return `__ORCA_WSL_KERNEL__ ${kernel}\n__ORCA_WSL_HOME__ /home/u\n\n__ORCA_REMOTE_PLATFORM__ Linux x86_64\n\n__ORCA_WSL_LIBC__\nldd (GNU libc) 2.39\n`
     }
-    return '4242\n'
+    const end = '\n__ORCA_WSL_CONNECT_STATE_END__\n'
+    return command.includes(end.trim()) ? `ABSENT${end}ABSENT${end}ABSENT${end}OPEN\n` : '4242\n'
   })
   return deployAndLaunchWslOrcad('Ubuntu-24.04', {
     holder: holder(),
@@ -191,6 +194,21 @@ describe('deployAndLaunchWslOrcad', () => {
     )
   })
 
+  it('hands its one connect-state read to recovery, adoption and deploy as hints', async () => {
+    const resolve = mocks.resolveContext.getMockImplementation()
+    mocks.resolveContext.mockImplementationOnce(async (target, connection, signal, h, known) => {
+      const context = await resolve?.(target, connection, signal, h, known)
+      const at = { conn: connection, host, remoteHome: '/home/u', userDataDir: '/home/u/.orca' }
+      return { ...context, activationRecord: await known.readActivationRecord(at) }
+    })
+    await launch()
+    const idle = { transactionAbsent: true, fenceOpen: true }
+    expect(mocks.recover).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(idle))
+    expect(mocks.adopt.mock.calls[0][3]).toEqual({ state: 'absent' })
+    const record = emptyOrcadActivationRecord()
+    expect(mocks.deploy.mock.calls[0][0].preRead).toEqual({ record, fenceOpen: true })
+  })
+
   it('applies the SSH census and downgrade admission to the first deploy', async () => {
     await launch()
     const options = mocks.deploy.mock.calls[0][0]
@@ -201,6 +219,7 @@ describe('deployAndLaunchWslOrcad', () => {
       target: 'linux-x64-glibc',
       recordedNodeRuntimeProbe: true
     })
+    expect(options.preRead).toBeUndefined()
     const newer = { ...emptyOrcadActivationRecord(), active: '2.0.0+cd', activeAppVersion: '2.0.0' }
     expect(options.admitRecord(newer, '1.5.0+ab')).toBe(
       "Orca 2.0.0 last ran this host's server, newer than this Orca (1.5.0). Update Orca to start it."
@@ -209,7 +228,25 @@ describe('deployAndLaunchWslOrcad', () => {
 
   it('refuses a WSL 1 distro before holding it or touching its files', async () => {
     await expect(launch('4.4.0-19041-Microsoft')).rejects.toMatchObject({
-      name: 'OrcadHostUnsupportedError'
+      name: 'OrcadHostUnsupportedError',
+      message: expect.stringContaining('wsl --set-version Ubuntu-24.04 2')
+    })
+    expect(mocks.steps).toEqual(['uname'])
+  })
+
+  it('tells an unregistered distro how to find the installed ones, before holding anything', async () => {
+    mocks.exec.mockImplementation(async () => {
+      mocks.steps.push('uname')
+      throw new Error(
+        'Command "uname -r" failed (exit 1): There is no distribution with the supplied name.\n' +
+          'Error code: Wsl/Service/WSL_E_DISTRO_NOT_FOUND'
+      )
+    })
+    await expect(
+      deployAndLaunchWslOrcad('Gone', { holder: holder(), createTransport: transport })
+    ).rejects.toMatchObject({
+      name: 'OrcadHostUnsupportedError',
+      message: expect.stringContaining('wsl --list --verbose')
     })
     expect(mocks.steps).toEqual(['uname'])
   })
@@ -816,15 +853,5 @@ describe('deployAndLaunchWslOrcad across an app update (E1)', () => {
     await launch()
     expect(mocks.incumbent).not.toHaveBeenCalled()
     expect(mocks.deploy.mock.calls[0][0].census.liveSessions).toBeNull()
-  })
-})
-
-describe('isWsl1KernelRelease', () => {
-  it('tells the WSL 1 syscall layer from a WSL 2 kernel, stock or custom', () => {
-    expect(isWsl1KernelRelease('4.4.0-19041-Microsoft')).toBe(true)
-    expect(isWsl1KernelRelease('4.4.0-22621-Microsoft\n')).toBe(true)
-    expect(isWsl1KernelRelease('5.15.167.4-microsoft-standard-WSL2')).toBe(false)
-    expect(isWsl1KernelRelease('6.6.36.6-microsoft-standard-WSL2+')).toBe(false)
-    expect(isWsl1KernelRelease('6.10.0-custom')).toBe(false)
   })
 })

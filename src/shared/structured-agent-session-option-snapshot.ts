@@ -7,9 +7,12 @@ import {
   nativeChatSessionOptionDescriptors,
   withTrackedNativeChatModel,
   type NativeChatShownModel
-} from './native-chat-session-option-snapshot'
-import type { SessionOptionDescriptor, SessionOptionValue } from './native-chat-session-options'
-import type { TrackedNativeChatSessionOption } from './native-chat-session-option-state'
+} from './native-chat/input/native-chat-session-option-snapshot'
+import type {
+  SessionOptionDescriptor,
+  SessionOptionValue
+} from './native-chat/input/native-chat-session-options'
+import type { TrackedNativeChatSessionOption } from './native-chat/input/native-chat-session-option-state'
 import { effectiveServiceTier } from './structured-agent-session-effective-tier'
 import { serviceTierOption } from './structured-agent-session-discovered-model'
 import {
@@ -85,7 +88,13 @@ function valuesUnderControls(
 ): Readonly<Record<string, TrackedNativeChatSessionOption>> {
   const tier = values.serviceTier?.value
   const control = controls.find((option) => option.id === 'serviceTier')
-  if (typeof tier !== 'string' || !control || (olderHost && tier === 'flex')) {
+  if (
+    typeof tier !== 'string' ||
+    !control ||
+    values.serviceTier?.source === 'applied' ||
+    values.model?.source === 'default' ||
+    (olderHost && tier === 'flex')
+  ) {
     return values
   }
   const effective = effectiveServiceTier({
@@ -186,8 +195,8 @@ export function structuredAgentSessionOptionSnapshot(
 ): SessionOptionDescriptor[] {
   const permission = structuredAgentSessionPermissionDescriptor(state)
   const options = modelOptionSnapshot(state).map((option) =>
-    (state.listingInProgress && ['effort', 'serviceTier', 'fastMode'].includes(option.id)) ||
-    (state.fastModeRestricted && option.id === 'fastMode')
+    (state.fastModeRestricted && option.id === 'fastMode') ||
+    (state.listingInProgress && ['effort', 'serviceTier', 'fastMode'].includes(option.id))
       ? { ...option, settable: false }
       : option
   )
@@ -210,16 +219,28 @@ export function canSetStructuredAgentSessionOption(
   state: StructuredAgentSessionOptionState,
   id: string,
   value: SessionOptionValue,
-  snapshot = structuredAgentSessionOptionSnapshot(state)
+  snapshot = structuredAgentSessionOptionSnapshot(state),
+  interactionReady = true
 ): boolean {
-  const descriptor = snapshot.find((entry) => entry.id === id)
-  return Boolean(
-    state.catalog &&
-    descriptor?.settable &&
-    state.pendingId !== id &&
-    ((typeof value === 'string' &&
-      descriptor?.kind.type === 'select' &&
-      descriptor.kind.choices.some((choice) => choice.value === value)) ||
-      (typeof value === 'boolean' && descriptor?.kind.type === 'boolean'))
+  if (
+    !interactionReady ||
+    state.pendingId === id ||
+    (id === 'fastMode' && state.fastModeRestricted)
+  ) {
+    return false
+  }
+  if (id === 'permissionMode') {
+    const descriptor = snapshot.find((entry) => entry.id === id)
+    return (
+      descriptor?.settable === true &&
+      descriptor.kind.type === 'select' &&
+      descriptor.kind.choices.some((choice) => choice.value === value)
+    )
+  }
+  return (
+    (['model', 'effort', 'serviceTier', 'personality'].includes(id) &&
+      typeof value === 'string' &&
+      value.length > 0) ||
+    (id === 'fastMode' && typeof value === 'boolean')
   )
 }

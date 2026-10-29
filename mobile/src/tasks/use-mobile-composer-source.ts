@@ -31,7 +31,6 @@ import type {
   SmartNameSelection
 } from './mobile-composer-source-types'
 import { useMobileComposerName } from './use-mobile-composer-name'
-const EMPTY_BASE: ComposerBaseState = {}
 
 export type UseMobileComposerSourceArgs = {
   client: RpcClient | null
@@ -43,12 +42,11 @@ export type UseMobileComposerSourceArgs = {
 export function useMobileComposerSource(args: UseMobileComposerSourceArgs) {
   const { client, selectedRepoId, worktreeBranches = [], onError } = args
   const [linkedWorkItem, setLinkedWorkItem] = useState<MobileLinkedWorkItem | null>(null)
-  const [base, setBase] = useState<ComposerBaseState>(EMPTY_BASE)
+  const [base, setBase] = useState<ComposerBaseState>({})
   const [reuseEligibleBranch, setReuseEligibleBranch] = useState<string | null>(null)
   const [reuseSelectedBranch, setReuseSelectedBranch] = useState(false)
   const [forkPushWarning, setForkPushWarning] = useState<string | null>(null)
   const [resolvingBase, setResolvingBase] = useState(false)
-  // New-by-name preserves the typed git branch, including slashes; only the folder is sanitized.
   const [branchCreateIntent, setBranchCreateIntent] = useState(false)
 
   const branchSelectionRef = useRef<{ refName: string; localBranchName: string } | null>(null)
@@ -60,7 +58,7 @@ export function useMobileComposerSource(args: UseMobileComposerSourceArgs) {
   const clearBaseAndBranch = useCallback(() => {
     branchSelectionRef.current = null
     setBranchCreateIntent(false)
-    setBase(EMPTY_BASE)
+    setBase({})
     setReuseEligibleBranch(null)
     setReuseSelectedBranch(false)
     setForkPushWarning(null)
@@ -83,7 +81,7 @@ export function useMobileComposerSource(args: UseMobileComposerSourceArgs) {
           if (resolveTokenRef.current !== token) {
             return
           }
-          setBase(EMPTY_BASE)
+          setBase({})
           onError?.(error instanceof Error ? error.message : 'Failed to resolve base branch.')
         })
         .finally(() => {
@@ -261,6 +259,7 @@ export function useMobileComposerSource(args: UseMobileComposerSourceArgs) {
 
   const handleBranchNameOverrideChange = useCallback(
     (value: string) => {
+      setReuseSelectedBranch(false)
       const { forkPushWarning: nextWarning, ...nextBase } = resolveComposerManualBranchNameChange({
         value,
         pushTarget: base.pushTarget,
@@ -299,7 +298,13 @@ export function useMobileComposerSource(args: UseMobileComposerSourceArgs) {
     handleBranchNameOverrideChange,
     reuseEligibleBranch,
     reuseSelectedBranch,
-    setReuseSelectedBranch,
+    setReuseSelectedBranch: (next: boolean) => {
+      setReuseSelectedBranch(next)
+      setBase((current) => ({
+        ...current,
+        branchNameOverride: next ? (reuseEligibleBranch ?? undefined) : undefined
+      }))
+    },
     forkPushWarning,
     resolvingBase,
     isNameAutoManaged,

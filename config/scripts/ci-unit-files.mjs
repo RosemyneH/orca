@@ -43,6 +43,7 @@ export const UNIT_EXCLUDE = [
   'src/shared/posix-command-path-lookup.test.ts',
   'tests/e2e/relay-region-compatibility.unit.test.ts',
   'tests/e2e/relay-region-correction.unit.test.ts',
+  'src/main/browser/cookies/browser-google-cookie-clear.electron.test.ts',
   // Electron probes with in-process deadlines; the package job runs them serially.
   'src/main/browser/popup-origin-chrome.electron.test.ts',
   'src/main/browser/browser-link-materialization.electron.test.ts',
@@ -53,6 +54,11 @@ export const UNIT_EXCLUDE = [
   'src/main/browser/browser-popup-adapter-compatibility.electron.test.ts',
   'src/main/browser/browser-popup-native-compatibility.electron.test.ts',
   'src/main/browser/browser-popup-background-compatibility.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-api.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-persistence.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-lifecycle.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-toolbar.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-native-messaging.electron.test.ts',
   `${CROSS_VERSION_WIRE_DIR}**`
 ]
 

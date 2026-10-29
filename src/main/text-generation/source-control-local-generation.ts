@@ -1,3 +1,4 @@
+import { wslDistroForCommand } from '../../shared/wsl-paths'
 import { mergeCommandEnvironment } from '../../shared/command-environment'
 import type { CommitMessagePlan } from '../../shared/commit-message-plan'
 import {
@@ -27,12 +28,16 @@ export function runLocalPlanForAgent(input: {
   spawnAgent: SpawnSourceControlAgent
   shouldExecute?: () => boolean
 }): Promise<InternalTextGenerationResult> {
+  const wslDistro = input.plan.promptFile
+    ? (wslDistroForCommand(input.target.cwd, input.target.wslDistro) ?? undefined)
+    : input.target.wslDistro
   const target = {
     ...input.target,
+    wslDistro,
     env: mergeCommandEnvironment(
       input.target.env,
       input.plan.env,
-      input.target.wslDistro ? 'linux' : process.platform
+      wslDistro ? 'linux' : process.platform
     )
   }
   const start = (): LocalProcessExecution<InternalTextGenerationResult> => {
@@ -45,10 +50,10 @@ export function runLocalPlanForAgent(input: {
     return runLocalSourceControlPlan({
       plan: input.plan,
       cwd: input.target.cwd,
-      env: input.target.wslDistro ? input.target.env : target.env,
+      env: wslDistro ? input.target.env : target.env,
       emptyResultName: input.emptyResultName,
       operation: input.operation,
-      wslDistro: input.target.wslDistro,
+      wslDistro,
       spawnAgent: input.spawnAgent
     })
   }

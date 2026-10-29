@@ -128,7 +128,7 @@ export class MobileRelayRpcStreams {
       if (typeof metadata.subscriptionId === 'string') {
         stream.subscriptionId = metadata.subscriptionId
       }
-      if (typeof metadata.streamId === 'number') {
+      if (typeof metadata.streamId === 'number' && stream.listener) {
         stream.streamIds.add(metadata.streamId)
         this.terminalListeners.set(metadata.streamId, stream.listener)
       }
@@ -142,9 +142,9 @@ export class MobileRelayRpcStreams {
     }
     if (!stream.cancelled) {
       if (response._meta) {
-        stream.listener(result, response._meta)
+        stream.listener?.(result, response._meta)
       } else {
-        stream.listener(result)
+        stream.listener?.(result)
       }
     }
     return true
@@ -164,15 +164,12 @@ export class MobileRelayRpcStreams {
   }
 
   clear(): void {
-    for (const stream of this.streams.values()) {
+    for (const [id, stream] of this.streams) {
       stream.cancelled = true
+      this.remove(id)
     }
-    this.streams.clear()
     this.cancelledSubscriptions.clear()
-    this.terminalListeners.clear()
-    this.terminalSnapshots.clear()
     this.unreadableTerminalFrames.clear()
-    this.activeBrowserStream = null
   }
 
   private cancel(id: string): void {
@@ -266,6 +263,8 @@ export class MobileRelayRpcStreams {
       this.activeBrowserStream = null
     }
     this.streams.delete(id)
+    stream.listener = undefined
+    stream.onBinaryFrame = undefined
   }
 
   private fail(id: string, stream: StreamRecord, message: string, error?: unknown): void {
@@ -282,11 +281,12 @@ export class MobileRelayRpcStreams {
     result: unknown,
     metadata?: RpcResponse['_meta']
   ): void {
+    const listener = stream.listener
     this.remove(id)
     if (metadata) {
-      stream.listener(result, metadata)
+      listener?.(result, metadata)
     } else {
-      stream.listener(result)
+      listener?.(result)
     }
   }
 }

@@ -25,6 +25,7 @@ import { RpcClientTerminalStreamRouter } from './rpc-client-terminal-stream-rout
 import * as sessionTabsStream from './rpc-client-session-tabs-stream'
 import type { RpcEnvelopeFields } from './rpc-envelope-fields'
 import type { RpcResponse, RpcSuccess } from './types'
+import { interruptedStreamFailure, endedStreamFailure } from './rpc-client-stream-failure'
 
 export class RpcClientStreamRegistry {
   private readonly streams = new Map<string, StreamRequest>()
@@ -56,7 +57,7 @@ export class RpcClientStreamRegistry {
       if (this.send(id, stream)) {
         stream.sent = true
       } else {
-        this.finish(id, stream, { type: 'error', message: 'Connection interrupted' })
+        this.finish(id, stream, interruptedStreamFailure())
       }
     } else {
       console.log('[net] subscribe queued — waiting for connected', {
@@ -126,13 +127,7 @@ export class RpcClientStreamRegistry {
     if (!stream) {
       return false
     }
-    this.finish(response.id, stream, {
-      type: 'error',
-      message: response.ok
-        ? 'Streaming request ended before it was ready.'
-        : response.error.message,
-      error: response.ok ? undefined : response.error
-    })
+    this.finish(response.id, stream, endedStreamFailure(response))
     return true
   }
 

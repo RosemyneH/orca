@@ -2,6 +2,7 @@
 import type { WslHostAddResult } from '../../shared/wsl-host-types'
 import type { WslHostDistroCandidate } from './wsl-host-distro-list'
 import { wslDistroHolderKey } from './wsl-distro-holder-record'
+import { wsl1DistroMessage, wslDistroNotRegisteredMessage } from './wsl-distro-unsupported'
 
 export const WSL_HOSTS_DISABLED_MESSAGE = 'WSL hosts are turned off in Settings → Experimental.'
 export const WSL_HOST_SERVER_FILES_MISSING_MESSAGE =
@@ -17,6 +18,21 @@ export function wslHostNotConnectedMessage(distro: string): string {
 
 export function wslHostStoppedMessage(distro: string): string {
   return `${distro} was stopped. Switch to one of its projects, or reconnect it in Settings → Remote Orca Servers, to start it again.`
+}
+
+/** Shown on a paired phone once a stop is confirmed: only the desktop starts a distro. */
+export function wslHostStoppedForPhoneMessage(distro: string): string {
+  return `The WSL host ${distro} isn’t running. Open one of its projects on your computer to start it.`
+}
+
+/** Shown on a paired phone while WSL hosts are switched off, or this one is being removed. */
+export function wslHostHiddenFromPhoneMessage(distro: string): string {
+  return `The WSL host ${distro} is turned off or being removed on your computer.`
+}
+
+/** Shown on a paired phone while the desktop can't confirm the host runs (starting, reconnecting). */
+export function wslHostUnavailableForPhoneMessage(distro: string): string {
+  return `The WSL host ${distro} isn’t available from your phone right now. Open one of its projects on your computer to connect it.`
 }
 
 export function wslHostRemovalPendingMessage(distro: string): string {
@@ -53,14 +69,14 @@ export function admitWslHostDistro(args: {
     return {
       ok: false,
       kind: 'failed',
-      message: `${args.requested} is not a registered WSL distro.`
+      message: wslDistroNotRegisteredMessage(args.requested)
     }
   }
   if (distro.version === 1) {
     return {
       ok: false,
       kind: 'unsupported-wsl1',
-      message: `${distro.name} runs WSL 1, which isn’t supported as a host. Convert it with: wsl --set-version ${distro.name} 2`
+      message: wsl1DistroMessage(distro.name)
     }
   }
   if (args.alreadyAdded(distro.name)) {
@@ -70,7 +86,7 @@ export function admitWslHostDistro(args: {
     return {
       ok: false,
       kind: 'distro-stopped',
-      message: `${distro.name} is stopped. Start it to add it as a host.`
+      message: `${distro.name} stopped since the list was read. Choose Start and add to start it.`
     }
   }
   return { distro }

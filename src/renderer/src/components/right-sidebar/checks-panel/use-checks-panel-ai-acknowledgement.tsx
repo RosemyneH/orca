@@ -15,7 +15,7 @@ import type { ChecksPanelControllerState } from './use-checks-panel-controller-s
 import type { ChecksPanelReviewDataState } from './use-checks-panel-review-data'
 import type { ChecksPanelPollingState } from './use-checks-panel-polling'
 import { buildSnapshottedThreadResolver } from '../pr-comment-snapshotted-thread-resolver'
-import { markPRCommentThreadResolved } from '../pr-comment-thread-resolution'
+import { markPRCommentThreadResolved } from '@/lib/pr-comment-thread-resolution'
 import { resolveGitLabMRDiscussionForChecks } from './gitlab-review-client'
 import { clearPRCommentsListSelection } from '../pr-comments-list-selection'
 import { translate } from '@/i18n/i18n'

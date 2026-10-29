@@ -1,3 +1,4 @@
+import { translate } from '../i18n/mobile-i18n'
 import type { MobileHostedReviewEligibilityReply } from './hosted-review-reply-schema'
 import { supportsHostedReviewCreation } from '../../../src/shared/hosted-review-creation-providers'
 import { resolveCreateReviewIntentEligibility } from '../../../src/shared/source-control-create-review-intent'
@@ -91,7 +92,9 @@ export function buildMobileCreatePrAction({
     }
   }
   const copy = hostedReviewCopy(eligibility.provider)
-  const label = `Create ${copy.titleLabel}`
+  const label = translate('sourceControl.createPrAction.createReview', 'Create {{titleLabel}}', {
+    titleLabel: copy.titleLabel
+  })
   // Busy workflows no-op; disable the action rather than expose an inert button.
   const busy = busyAction !== null
   const loading = busyAction !== null && BUSY_ACTIONS.has(busyAction)
@@ -127,7 +130,12 @@ export function buildMobileCreatePrAction({
       blockedReason: eligibility.blockedReason,
       nextAction: eligibility.nextAction,
       reviewLookupOutcome: eligibility.reviewLookupOutcome
-    }) ?? `This branch is not ready for a ${copy.reviewLabel} yet.`
+    }) ??
+    translate(
+      'sourceControl.prCreate.notReady',
+      'This branch is not ready for a {{reviewLabel}} yet.',
+      { reviewLabel: copy.reviewLabel }
+    )
 
   return {
     visible: true,

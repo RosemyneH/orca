@@ -16,7 +16,7 @@ import {
   subscribeMobilePresentation,
   readMobilePresentation
 } from '../terminal/terminal-presentation'
-import { encodeNativeChatTranscriptIdentity } from '../../../src/shared/native-chat-transcript-retention'
+import { encodeNativeChatTranscriptIdentity } from '../../../src/shared/native-chat/transcript/native-chat-transcript-retention'
 import {
   resolveMobileNativeChat,
   type MobileNativeChatTab
@@ -49,11 +49,9 @@ export function useMobileNativeChatActiveResolution(args: {
   activeChatSessionId: string | null
   activeChatStructured: boolean
   activeChatResolution: ReturnType<typeof resolveMobileNativeChat>
-  activeTabAgentWorking: boolean
   nativeChatStatus: MobileNativeChatTab['agentStatus'] | null
   sourceIdentity: string
   streamIdentity: string
-  streamScopeKey: string
 } {
   const {
     activeHandleRef,
@@ -140,16 +138,9 @@ export function useMobileNativeChatActiveResolution(args: {
   const activeChatStructured =
     activeChatResolution != null && activeSessionTab?.type === 'agent-session'
   const activeTabStatus = activeSessionTab?.agentStatus
-  // Why: a turn restored across a host restart is unverifiable, so it must not offer Stop.
-  const activeTabAgentWorking =
-    activeTabStatus?.state === 'working' &&
-    activeTabStatus.workingMode !== 'monitoring' &&
-    activeTabStatus.restoredUnconfirmed !== true
   const nativeChatStatus = activeChatResolution && !activeChatStructured ? activeTabStatus : null
   const routeKey = `${hostId}\0${worktreeId}\0${activeSessionTabId ?? ''}`
   const streamIdentity = `${routeKey}\0${activeChatSessionId ?? ''}\0${activeHandleRef.current ?? ''}`
-  const providerSessionId = activeSessionTab?.agentStatus?.providerSession?.id ?? ''
-  const streamScopeKey = `${routeKey}\0${activeChatSessionId ?? providerSessionId}\0${activeHandleRef.current ?? ''}`
 
   return {
     sessionViewReady,
@@ -164,10 +155,8 @@ export function useMobileNativeChatActiveResolution(args: {
     activeChatSessionId,
     activeChatStructured,
     activeChatResolution,
-    activeTabAgentWorking,
     nativeChatStatus,
     sourceIdentity: encodeNativeChatTranscriptIdentity([hostId, worktreeId]),
-    streamIdentity,
-    streamScopeKey
+    streamIdentity
   }
 }

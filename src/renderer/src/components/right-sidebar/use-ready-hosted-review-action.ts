@@ -58,7 +58,13 @@ export function useReadyHostedReviewAction({
       await onRefreshReview()
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : `Failed to mark ${reviewLabel} ready for review`
+        err instanceof Error
+          ? err.message
+          : translate(
+              'auto.components.right.sidebar.HostedReviewActions.markReadyFailed',
+              'Failed to mark {{review}} ready for review',
+              { review: reviewLabel }
+            )
       setActionError(message)
       toast.error(message)
     } finally {

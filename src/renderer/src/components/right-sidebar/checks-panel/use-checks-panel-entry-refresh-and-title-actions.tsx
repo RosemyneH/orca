@@ -114,6 +114,7 @@ export function useChecksPanelEntryRefreshAndTitleActions(
           linkedAzureDevOpsPR,
           linkedGiteaPR
         })
+        // Entering the tab is a user act: it may start a stopped WSL distro (E9).
         if (activeGitLabReview) {
           void fetchGitLabDetails()
         }
@@ -121,7 +122,7 @@ export function useChecksPanelEntryRefreshAndTitleActions(
       }
       enqueueGitHubPRRefresh(activeWorktreeId, 'active', 80)
       if (options.refreshChecks) {
-        void fetchChecks({ force: true })
+        void fetchChecks({ force: true, wakeWslDistro: true })
       }
       if (options.refreshComments) {
         void fetchComments({ force: true })

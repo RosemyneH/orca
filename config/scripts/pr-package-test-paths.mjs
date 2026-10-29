@@ -2,6 +2,7 @@ import process from 'node:process'
 import { pathToFileURL } from 'node:url'
 
 export const LINUX_PACKAGE_TESTS = [
+  'src/main/browser/cookies/browser-google-cookie-clear.electron.test.ts',
   'config/scripts/packaged-repository-input-exclusion.test.mjs',
   'src/main/browser/popup-origin-chrome.electron.test.ts',
   'src/main/browser/browser-link-materialization.electron.test.ts',
@@ -11,7 +12,12 @@ export const LINUX_PACKAGE_TESTS = [
   'src/main/browser/browser-popup-compatibility.electron.test.ts',
   'src/main/browser/browser-popup-adapter-compatibility.electron.test.ts',
   'src/main/browser/browser-popup-native-compatibility.electron.test.ts',
-  'src/main/browser/browser-popup-background-compatibility.electron.test.ts'
+  'src/main/browser/browser-popup-background-compatibility.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-api.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-persistence.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-lifecycle.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-toolbar.electron.test.ts',
+  'src/main/browser/extensions/browser-extension-native-messaging.electron.test.ts'
 ]
 
 // Cloud-only code must run check-test-file-runners: cloud is neither linted nor format-checked, and any source can register tests.

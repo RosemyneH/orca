@@ -78,7 +78,7 @@ export function AgentsPane({
         <AgentRuntimeSetting
           settings={settings}
           updateSettings={updateSettings}
-          refresh={refreshLocalAgents}
+          refresh={() => refreshLocalAgents(undefined, { wakeWslDistro: true })}
           wslSupportedPlatform={wslSupportedPlatform}
           wslAvailable={wslAvailable}
           wslDistros={wslDistros}

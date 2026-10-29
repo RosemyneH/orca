@@ -6,11 +6,13 @@ import { cn } from '@/lib/utils'
 import { WORKSPACE_FILE_PATH_MIME } from '@/lib/workspace-file-drag'
 import { writeWorkspaceFileDragSourceForWorkspace } from '@/lib/workspace-file-drag-source'
 import { translate } from '@/i18n/i18n'
+import { useUiLanguageRevision } from '@/i18n/use-ui-language-revision'
 import type { GitStatusEntry } from '../../../../../../shared/git-status-types'
 import { ActionButton } from './action-button'
 import { ConflictBadge } from './conflict-badge'
 import { getLocalizedConflictKindLabel } from './conflict-label'
 import { DiffLineCounts } from './diff-line-counts'
+import { reviewNoteCountTitle } from './review-note-count-title'
 import { SourceControlEntryContextMenu } from './entry-context-menu'
 import {
   canDiscardStatusEntry,
@@ -68,6 +70,7 @@ export const UncommittedEntryRow = React.memo(function UncommittedEntryRow({
   // When set, the row is a dirty submodule: clicking toggles lazy expansion instead of opening an uninformative gitlink diff.
   submoduleExpansion?: { isExpanded: boolean; onToggle: () => void }
 }): React.JSX.Element {
+  useUiLanguageRevision()
   const fileName = basename(entry.path)
   const parentDir = dirname(entry.path)
   const dirPath = parentDir === '.' ? '' : parentDir
@@ -180,11 +183,7 @@ export const UncommittedEntryRow = React.memo(function UncommittedEntryRow({
         {commentCount > 0 && (
           <span
             className="flex shrink-0 items-center gap-0.5 text-[10px] text-muted-foreground"
-            title={translate(
-              'auto.components.right.sidebar.SourceControl.657e0c90ad',
-              '{{value0}} note{{value1}}',
-              { value0: commentCount, value1: commentCount === 1 ? '' : 's' }
-            )}
+            title={reviewNoteCountTitle(commentCount)}
           >
             <MessageSquare className="size-3" />
             <span className="tabular-nums">{commentCount}</span>

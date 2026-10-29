@@ -5,12 +5,10 @@ import {
   NATIVE_CHAT_SUBAGENT_GROUP_COPY as COPY,
   type NativeChatSubagentGroupCopyId,
   type NativeChatSubagentGroupSay
-} from '../../../../shared/native-chat-subagent-group-header'
+} from '../../../../shared/native-chat/transcript/native-chat-subagent-group-header'
+import type { CopyValues } from '../../../../shared/counted-copy-english'
 
-const PIECES: Record<
-  NativeChatSubagentGroupCopyId,
-  (values?: { value0: string | number }) => string
-> = {
+const PIECES: Record<NativeChatSubagentGroupCopyId, (values?: CopyValues) => string> = {
   stateCompleted: () =>
     translate('components.native-chat.subagents.state.completed', COPY.stateCompleted),
   stateWorking: () =>
@@ -22,32 +20,73 @@ const PIECES: Record<
   stateUnverifiable: () =>
     translate('components.native-chat.subagents.state.unverifiable', COPY.stateUnverifiable),
   stateWorkingCount: (values) =>
-    translate(
-      'components.native-chat.subagents.state.workingCount',
-      COPY.stateWorkingCount,
-      values
-    ),
+    values?.count === 1
+      ? translate(
+          'components.native-chat.subagents.state.workingCount_one',
+          COPY.stateWorkingCount.one,
+          values
+        )
+      : translate(
+          'components.native-chat.subagents.state.workingCount_other',
+          COPY.stateWorkingCount.other,
+          values
+        ),
   stateIdleCount: (values) =>
-    translate('components.native-chat.subagents.state.idleCount', COPY.stateIdleCount, values),
+    values?.count === 1
+      ? translate(
+          'components.native-chat.subagents.state.idleCount_one',
+          COPY.stateIdleCount.one,
+          values
+        )
+      : translate(
+          'components.native-chat.subagents.state.idleCount_other',
+          COPY.stateIdleCount.other,
+          values
+        ),
   stateFailedCount: (values) =>
-    translate('components.native-chat.subagents.state.failedCount', COPY.stateFailedCount, values),
+    values?.count === 1
+      ? translate(
+          'components.native-chat.subagents.state.failedCount_one',
+          COPY.stateFailedCount.one,
+          values
+        )
+      : translate(
+          'components.native-chat.subagents.state.failedCount_other',
+          COPY.stateFailedCount.other,
+          values
+        ),
   stateStoppedCount: (values) =>
-    translate(
-      'components.native-chat.subagents.state.stoppedCount',
-      COPY.stateStoppedCount,
-      values
-    ),
+    values?.count === 1
+      ? translate(
+          'components.native-chat.subagents.state.stoppedCount_one',
+          COPY.stateStoppedCount.one,
+          values
+        )
+      : translate(
+          'components.native-chat.subagents.state.stoppedCount_other',
+          COPY.stateStoppedCount.other,
+          values
+        ),
   stateUnverifiableCount: (values) =>
-    translate(
-      'components.native-chat.subagents.state.unverifiableCount',
-      COPY.stateUnverifiableCount,
-      values
-    ),
-  startedOne: () => translate('components.native-chat.subagents.startedOne', COPY.startedOne),
-  startedN: (values) =>
-    translate('components.native-chat.subagents.startedN', COPY.startedN, values),
-  ranOne: () => translate('components.native-chat.subagents.ranOne', COPY.ranOne),
-  ranN: (values) => translate('components.native-chat.subagents.ranN', COPY.ranN, values),
+    values?.count === 1
+      ? translate(
+          'components.native-chat.subagents.state.unverifiableCount_one',
+          COPY.stateUnverifiableCount.one,
+          values
+        )
+      : translate(
+          'components.native-chat.subagents.state.unverifiableCount_other',
+          COPY.stateUnverifiableCount.other,
+          values
+        ),
+  started: (values) =>
+    values?.count === 1
+      ? translate('components.native-chat.subagents.started_one', COPY.started.one, values)
+      : translate('components.native-chat.subagents.started_other', COPY.started.other, values),
+  ran: (values) =>
+    values?.count === 1
+      ? translate('components.native-chat.subagents.ran_one', COPY.ran.one, values)
+      : translate('components.native-chat.subagents.ran_other', COPY.ran.other, values),
   tokens: (values) => translate('components.native-chat.subagents.tokens', COPY.tokens, values)
 }
 

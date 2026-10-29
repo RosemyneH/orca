@@ -108,6 +108,7 @@ export type SourceControlAgentSpawnInput = {
   wslDistro?: string
   // WSL applies these in the guest; native callers already merge them into env.
   commandEnv?: Record<string, string>
+  preparation?: { script: string; args: string[] }
   stdinMode: 'ignore' | 'pipe'
   useCwdForNative: boolean
 }
@@ -115,3 +116,13 @@ export type SourceControlAgentSpawnInput = {
 export type SpawnSourceControlAgent = (
   input: SourceControlAgentSpawnInput
 ) => SpawnedSourceControlAgentProcess
+
+export type LocalSourceControlPlanInput = {
+  plan: CommitMessagePlan
+  cwd: string
+  env: NodeJS.ProcessEnv | undefined
+  emptyResultName: string
+  operation: TextGenerationOperation
+  wslDistro?: string
+  spawnAgent: SpawnSourceControlAgent
+}

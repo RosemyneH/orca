@@ -12,7 +12,7 @@ import {
   shouldRespawnWebRuntimeTerminalAfterWake
 } from './tracking-decisions'
 import { acceptReplayedWebSessionTabsSnapshot } from './tracking-lifecycle'
-import { applyWebSessionTabsSnapshot } from './snapshot-api'
+import { createWebSessionTabsSnapshotPatch } from './snapshot-api'
 import { applyWebSessionTabsStorePatch } from './store-patch'
 import {
   hostSessionMirrorSettleForPatchlessFrame,
@@ -125,7 +125,7 @@ export function createActiveSessionSnapshotApplier({
         hostAffirmedWorktree ||= hostSnapshotAffirmsWorktreeContents(recovered)
         const replayed = isRuntimeSubscriptionReplayResponse(response)
         settle = applyWebSessionTabsStorePatch(
-          (state) => applyWebSessionTabsSnapshot(state, recovered, environmentId),
+          createWebSessionTabsSnapshotPatch(recovered, environmentId),
           {
             frames: [
               {

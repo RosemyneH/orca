@@ -68,6 +68,8 @@ export type HostedReviewForBranchArgs = {
   currentHeadOid?: string | null
   /** Only selected-worktree surfaces set active: O(1) checks refresh per minute; O(N) lists refresh more slowly within the shared API budget (#11532). */
   active?: boolean
+  /** Desktop IPC only: an explicit Refresh, which may start a stopped WSL distro (E9). */
+  wakeWslDistro?: boolean
 }
 
 export type HostedReviewSummary = {
@@ -110,12 +112,30 @@ export type CreateHostedReviewErrorCode =
   | 'push_failed'
   | 'unknown'
 
+/** An Orca-authored create failure that clients can show in their own language. */
+export type CreateHostedReviewFailureReason =
+  | NonNullable<HostedReviewCreationBlockedReason>
+  | 'branch_changed'
+  | 'branch_status_unverified'
+  | 'review_lookup_unavailable'
+  | 'provider_not_supported'
+  | 'same_base_branch'
+  | 'rejected'
+  | 'repository_not_found'
+  | 'create_failed'
+  | 'creation_unconfirmed'
+
 export type CreateHostedReviewResult =
   | { ok: true; number: number; url: string }
   | {
       ok: false
       code: CreateHostedReviewErrorCode
+      /** English text for mobile, older clients and logs. */
       error: string
+      /** Absent from older hosts; clients then show `error`. */
+      reason?: CreateHostedReviewFailureReason
+      /** The base branch named by the `base_not_on_remote` reason. */
+      base?: string
       existingReview?: HostedReviewSummary
     }
 
@@ -131,6 +151,9 @@ export type CreateStackedHostedReviewResult =
       ok: false
       code: CreateHostedReviewErrorCode
       error: string
+      /** Set when the failure comes from the plain create step. */
+      reason?: CreateHostedReviewFailureReason
+      base?: string
       createdReview?: HostedReviewSummary
     }
 

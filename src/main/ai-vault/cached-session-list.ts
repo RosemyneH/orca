@@ -1,16 +1,12 @@
 import { join } from 'node:path'
-import type { SessionSearchScopeCatalogSource } from '../ai-vault-search/session-search-scope-catalog'
-import {
-  compileSessionSearchProjectOwnership,
-  sessionSearchProjectOwner
-} from '../ai-vault-search/session-search-project-ownership'
 import { claudeProfileHistoryDirs } from '../claude-accounts/claude-profile-installed-router'
 import {
   clearAiVaultBackgroundRestartCircuit,
   resetAiVaultScannerBackgroundForTests,
   scanAiVaultSessionsInBackground
 } from './session-scanner-background'
-import { getCachedWslDistros, hasCachedWslDistros, listRunningWslHomeDirsAsync } from '../wsl'
+import { getCachedWslDistros, hasCachedWslDistros } from '../wsl'
+import { listRunningWslHomeDirsUnlessStopped } from '../wsl/wsl-home-unless-stopped'
 import { filterPathsToRunningWslDistrosAsync } from '../wsl-running-path-filter'
 import {
   isAiVaultScanCancelledError,
@@ -52,7 +48,6 @@ export class AiVaultLocalScanError extends Error {
 
 // Configure sources through the runtime service; headless serve never runs window-only IPC registration.
 export type AiVaultSessionSources = {
-  getProjectOwnershipCatalog?: SessionSearchScopeCatalogSource
   getAdditionalCodexHomePaths?: () => readonly string[]
 }
 
@@ -122,16 +117,14 @@ export async function listAiVaultSessions(
     cachedList.expiresAt > now &&
     aiVaultCachedDepthServes(cachedList.depth, depth, args?.scopePaths)
   ) {
-    return annotateHistoryOwnership(
-      truncateAiVaultListResult(cachedList.result, depth, args?.scopePaths),
-      args
-    )
+    return truncateAiVaultListResult(cachedList.result, depth, args?.scopePaths)
   }
   // Capture before the coordinator's start microtask so intervening invalidation still rejects the result.
   const startGeneration = cacheGeneration
   let progress: LocalAiVaultScanProgressHandle | null = null
-  const result = await scanCoordinator.run({
-    key: scanKey,
+  return scanCoordinator.run({
+    // Isolate invalidated scans without changing the key used by progress readers.
+    key: JSON.stringify({ scanKey, generation: startGeneration }),
     force: args?.force,
     signal: options.signal,
     onCreate: (scanId) => {
@@ -178,37 +171,6 @@ export async function listAiVaultSessions(
       return result
     }
   })
-  return annotateHistoryOwnership(result, args)
-}
-
-async function annotateHistoryOwnership(
-  result: AiVaultListResult,
-  args?: AiVaultListArgs
-): Promise<AiVaultListResult> {
-  if (!args?.historyOwnership) {
-    return result
-  }
-  try {
-    const catalog = sources.getProjectOwnershipCatalog?.()
-    if (catalog) {
-      const ownership = await compileSessionSearchProjectOwnership(
-        catalog,
-        args.historyOwnership.projectKey ?? ''
-      )
-      result = {
-        ...result,
-        sessions: result.sessions.map((session) => ({
-          ...session,
-          projectOwnerKey: session.cwd
-            ? sessionSearchProjectOwner(ownership, session.cwd, session.filePath)
-            : null
-        }))
-      }
-    }
-  } catch (error) {
-    console.error('[ai-vault] history ownership unavailable:', error)
-  }
-  return result
 }
 
 // Subagent transcript validation shares these WSL-aware roots with discovery.
@@ -220,7 +182,11 @@ export async function getAiVaultWslHomeDirs(): Promise<string[]> {
   if (hasCachedWslDistros() && getCachedWslDistros()?.length === 0) {
     return []
   }
-  return listRunningWslHomeDirsAsync()
+  return listRunningWslHomeDirsUnlessStopped()
+}
+
+export function aiVaultSessionListCacheGeneration(): number {
+  return cacheGeneration
 }
 
 // Invalidate cached results and disarm in-flight cache writes after deletion.

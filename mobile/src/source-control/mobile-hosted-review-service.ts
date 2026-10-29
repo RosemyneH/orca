@@ -1,3 +1,4 @@
+import { translate } from '../i18n/mobile-i18n'
 import type { MobileHostedReviewEligibilityReply } from './hosted-review-reply-schema'
 import { getRepoIdFromWorktreeId } from '../../../src/shared/worktree/id'
 import type { RpcSendParams } from '../transport/rpc-params-contract'
@@ -179,7 +180,7 @@ async function pushMobileBranchBeforeCreate(
 function formatMobileHostedReviewCreateError(
   result: MobileHostedReviewCreateReply,
   pushed: boolean,
-  shortLabel: string
+  provider: MobileHostedReviewCreateInput['provider']
 ): string {
   if (result.ok) {
     return ''
@@ -187,8 +188,15 @@ function formatMobileHostedReviewCreateError(
   if (!pushed) {
     return result.error
   }
-  const prefix = new RegExp(`^Create ${shortLabel} failed:\\s*`, 'i')
-  return `Push succeeded, but ${shortLabel} creation failed: ${result.error.replace(prefix, '')}`
+  const prefix = provider === 'gitlab' ? /^Create MR failed:\s*/i : /^Create PR failed:\s*/i
+  return translate(
+    'sourceControl.hostedReviewCreate.pushSucceeded',
+    'Push succeeded, but {{shortLabel}} creation failed: {{error}}',
+    {
+      shortLabel: hostedReviewCopy(provider).shortLabel,
+      error: result.error.replace(prefix, '')
+    }
+  )
 }
 
 async function finishMobileHostedReviewCreateSuccess(
@@ -262,11 +270,8 @@ export async function createMobileHostedReview(
     return {
       ok: false,
       error:
-        formatMobileHostedReviewCreateError(
-          result,
-          pushed,
-          hostedReviewCopy(input.provider).shortLabel
-        ) || 'Failed to create pull request'
+        formatMobileHostedReviewCreateError(result, pushed, input.provider) ||
+        'Failed to create pull request'
     }
   } catch (err) {
     // Inline creation must display transport errors instead of leaking rejected promises.

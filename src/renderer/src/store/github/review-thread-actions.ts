@@ -2,6 +2,10 @@ import type { StateCreator } from 'zustand'
 import type { AppState } from '../types'
 import type { GitHubSlice } from './slice-types'
 import { callRuntimeRpc } from '../../runtime/runtime-rpc-client'
+import {
+  markPRCommentThreadResolved,
+  restorePRCommentThreadSnapshot
+} from '@/lib/pr-comment-thread-resolution'
 import { prCommentsCacheSuffix, sourceScopedRepoCacheKey } from './cache-identity'
 import {
   getGitHubRepoSourceSettings,
@@ -30,18 +34,24 @@ export const createReviewThreadActions = (
       repo !== undefined
     )
 
-    // Optimistic toggle of isResolved for this thread; reverts if the API call fails.
-    const prev = get().commentsCache[cacheKey]?.data
-    if (prev) {
-      set((s) => ({
-        commentsCache: {
-          ...s.commentsCache,
-          [cacheKey]: {
-            ...s.commentsCache[cacheKey],
-            data: prev.map((c) => (c.threadId === threadId ? { ...c, isResolved: resolve } : c))
+    const previousThreadComments =
+      get().commentsCache[cacheKey]?.data?.filter((comment) => comment.threadId === threadId) ?? []
+    if (previousThreadComments.length > 0) {
+      set((s) => {
+        const entry = s.commentsCache[cacheKey]
+        if (!entry?.data) {
+          return s
+        }
+        return {
+          commentsCache: {
+            ...s.commentsCache,
+            [cacheKey]: {
+              ...entry,
+              data: markPRCommentThreadResolved(entry.data, threadId, resolve)
+            }
           }
         }
-      }))
+      })
     }
 
     const requestContext = getGitHubWorkItemRequestContext(
@@ -78,13 +88,22 @@ export const createReviewThreadActions = (
       console.error('Failed to update review thread:', err)
       ok = false
     }
-    if (!ok && prev) {
-      set((s) => ({
-        commentsCache: {
-          ...s.commentsCache,
-          [cacheKey]: { ...s.commentsCache[cacheKey], data: prev }
+    if (!ok && previousThreadComments.length > 0) {
+      set((s) => {
+        const entry = s.commentsCache[cacheKey]
+        if (!entry?.data) {
+          return s
         }
-      }))
+        return {
+          commentsCache: {
+            ...s.commentsCache,
+            [cacheKey]: {
+              ...entry,
+              data: restorePRCommentThreadSnapshot(entry.data, previousThreadComments)
+            }
+          }
+        }
+      })
     }
     return ok
   }

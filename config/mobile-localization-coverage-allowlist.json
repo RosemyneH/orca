@@ -1,0 +1,4209 @@
+[
+  {
+    "filePath": "mobile/app/mobile-onboarding.tsx",
+    "kind": "jsx-text",
+    "text": "Orca",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/browser/MobileBrowserKeyRow.tsx",
+    "kind": "jsx-expression",
+    "text": "Esc",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/browser/MobileBrowserPointerModifiers.tsx",
+    "kind": "object-property:label",
+    "text": "Alt",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/browser/MobileBrowserPointerModifiers.tsx",
+    "kind": "object-property:label",
+    "text": "Cmd",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/browser/MobileBrowserPointerModifiers.tsx",
+    "kind": "object-property:label",
+    "text": "Ctrl",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/browser/MobileBrowserPointerModifiers.tsx",
+    "kind": "object-property:label",
+    "text": "Shift",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/accounts-snapshot.ts",
+    "kind": "object-property:message",
+    "text": "Claude limits use the wrong provider identity",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/accounts-snapshot.ts",
+    "kind": "object-property:message",
+    "text": "Codex limits use the wrong provider identity",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/accounts-snapshot.ts",
+    "kind": "object-property:message",
+    "text": "Host Codex accounts cannot name a WSL distro",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/accounts-snapshot.ts",
+    "kind": "object-property:message",
+    "text": "Host rate-limit targets cannot name a WSL distro",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/accounts-snapshot.ts",
+    "kind": "object-property:message",
+    "text": "Inactive Claude limits use the wrong provider identity",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/accounts-snapshot.ts",
+    "kind": "object-property:message",
+    "text": "Inactive Codex limits use the wrong provider identity",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/accounts-snapshot.ts",
+    "kind": "object-property:message",
+    "text": "WSL Codex accounts require an exact distro",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/accounts-snapshot.ts",
+    "kind": "object-property:message",
+    "text": "WSL rate-limit targets require an exact distro",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/codex-reset-credit-reply-schema.ts",
+    "kind": "object-property:message",
+    "text": "Host reset scopes cannot name a WSL distro",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/codex-reset-credit-reply-schema.ts",
+    "kind": "object-property:message",
+    "text": "WSL reset scopes require an exact distro",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/CustomKeyModal.tsx",
+    "kind": "object-property:label",
+    "text": "Alt",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/CustomKeyModal.tsx",
+    "kind": "object-property:label",
+    "text": "Ctrl",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/CustomKeyModal.tsx",
+    "kind": "object-property:label",
+    "text": "Shift",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/mobile-markdown-blocks.tsx",
+    "kind": "jsx-expression",
+    "text": "[x]",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/MobileRichMarkdownEditor.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "https://",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/NewWorkspaceSetupScriptField.tsx",
+    "kind": "jsx-expression",
+    "text": "ORCA.YAML",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/components/pr-sidebar/MermaidDiagram.tsx",
+    "kind": "jsx-text",
+    "text": "mermaid",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/diagnostics/connection-diagnostics-submission.ts",
+    "kind": "object-property:error",
+    "text": "status",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/files/mobile-file-preview-route.ts",
+    "kind": "object-property:message",
+    "text": "Unable to load preview",
+    "dynamic": false,
+    "count": 3
+  },
+  {
+    "filePath": "mobile/src/home/MobileHomeTopBar.tsx",
+    "kind": "jsx-text",
+    "text": "Orca",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/mobile-web-shell/shell-bridge-log-lines.ts",
+    "kind": "object-property:message",
+    "text": "Web shell bridge:",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/mobile-web-shell/shell-bridge-log-lines.ts",
+    "kind": "object-property:message",
+    "text": "Web shell: page frame with no bridge host",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/new-workspace/NewWorkspaceHostPicker.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Create Workspace On",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/new-workspace/NewWorkspaceLoadingDrawer.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Cancel",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/new-workspace/NewWorkspaceLoadingDrawer.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Downloading",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/new-workspace/NewWorkspaceLoadingDrawer.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Loading",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/new-workspace/NewWorkspaceLoadingDrawer.tsx",
+    "kind": "jsx-text",
+    "text": "Downloading…",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/onboarding/NotificationOnboardingPreview.tsx",
+    "kind": "jsx-text",
+    "text": "Orca",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/github-pr-entity-reply-schema.ts",
+    "kind": "object-property:message",
+    "text": "review has no login",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/github-pr-read-reply-schema.ts",
+    "kind": "object-property:message",
+    "text": "found outcome has no readable pr",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/github-pr-read-reply-schema.ts",
+    "kind": "object-property:message",
+    "text": "pull request has no number or state",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/MobileSessionSheets.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "https://example.com",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/native-chat/composer/MobileNativeChatComposerMic.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Dictate",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/native-chat/composer/MobileNativeChatComposerMic.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Starting dictation",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/native-chat/composer/MobileNativeChatComposerMic.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Stop dictation",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/native-chat/composer/MobileNativeChatComposerMic.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Transcribing dictation",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/QuickCommandEditorForm.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "npm run dev",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/session/use-mobile-pr-actions.ts",
+    "kind": "object-property:error",
+    "text": "Not connected",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/settings/about-screen.tsx",
+    "kind": "jsx-text",
+    "text": "@orca_build",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/settings/about-screen.tsx",
+    "kind": "jsx-text",
+    "text": "onOrca.dev",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/settings/about-screen.tsx",
+    "kind": "jsx-text",
+    "text": "Orca",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/settings/about-screen.tsx",
+    "kind": "jsx-text",
+    "text": "stablyai/orca",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-branch-compare-outcome.ts",
+    "kind": "object-property:message",
+    "text": "Unable to resolve the base branch for comparison.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-branch-compare.ts",
+    "kind": "object-property:title",
+    "text": "Committed on Branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-create-pr-action.ts",
+    "kind": "object-property:label",
+    "text": "Checking review status…",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-create-pr-action.ts",
+    "kind": "object-property:label",
+    "text": "Create Pull Request",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-create-pr-action.ts",
+    "kind": "object-property:label",
+    "text": "Review creation unavailable for this provider",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-create-pr-action.ts",
+    "kind": "object-property:label",
+    "text": "Review status unavailable",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-hosted-review-create-intent.ts",
+    "kind": "object-property:error",
+    "text": "Branch changed while preparing the pull request.",
+    "dynamic": false,
+    "count": 4
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-hosted-review-create-intent.ts",
+    "kind": "object-property:error",
+    "text": "Could not generate a commit message. Add one in Source Control, then retry.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-hosted-review-create-intent.ts",
+    "kind": "object-property:error",
+    "text": "Resolve conflicts before creating a pull request.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-hosted-review-create-intent.ts",
+    "kind": "object-property:error",
+    "text": "Resolve or stage changes before creating a pull request.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/mobile-hosted-review-create-intent.ts",
+    "kind": "object-property:error",
+    "text": "Review the commit message, then retry Create PR.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileBranchDiffPreviewDrawer.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Close committed diff preview",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileBranchDiffPreviewDrawer.tsx",
+    "kind": "jsx-expression",
+    "text": "..HEAD",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileBranchDiffPreviewDrawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Committed on branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileBranchDiffPreviewDrawer.tsx",
+    "kind": "jsx-text",
+    "text": "Diff truncated for mobile preview.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileBranchDiffPreviewDrawer.tsx",
+    "kind": "jsx-text",
+    "text": "Unable to Load Diff",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileCommitFailurePanel.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Fix commit failure with AI",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileCommitFailurePanel.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Hide commit failure details",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileCommitFailurePanel.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Show commit failure details",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileCommitFailurePanel.tsx",
+    "kind": "jsx-expression",
+    "text": "Commit failed.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileCommitFailurePanel.tsx",
+    "kind": "jsx-expression",
+    "text": "Hide details",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileCommitFailurePanel.tsx",
+    "kind": "jsx-expression",
+    "text": "Show details",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileCommitFailurePanel.tsx",
+    "kind": "jsx-text",
+    "text": "Commit failed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileCommitFailurePanel.tsx",
+    "kind": "jsx-text",
+    "text": "Fix",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileGitHistoryList.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Retry",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileGitHistoryList.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Retry commit files",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileGitHistoryList.tsx",
+    "kind": "jsx-expression",
+    "text": "Waiting for desktop...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileGitHistoryList.tsx",
+    "kind": "jsx-text",
+    "text": "No commits.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileGitHistoryList.tsx",
+    "kind": "jsx-text",
+    "text": "No file changes",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileGitHistoryList.tsx",
+    "kind": "jsx-text",
+    "text": "Retry",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileGitHistoryList.tsx",
+    "kind": "jsx-text",
+    "text": "Waiting for desktop...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlBranchCard.tsx",
+    "kind": "jsx-text",
+    "text": "changed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlBranchCard.tsx",
+    "kind": "jsx-text",
+    "text": "on branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlBranchCard.tsx",
+    "kind": "jsx-text",
+    "text": "staged",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-attribute:accessibilityHint",
+    "text": "Clear the message to regenerate.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Cancel commit message generation",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Commit message disabled. No staged files.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Generate commit message with AI",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Open source control actions",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Commit message",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-text",
+    "text": "No local changes",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-text",
+    "text": "No staged files",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-text",
+    "text": "Reconnecting to desktop...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-text",
+    "text": "Stage All",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-text",
+    "text": "Unstage All",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlContent.tsx",
+    "kind": "jsx-text",
+    "text": "Working tree is clean.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileList.tsx",
+    "kind": "object-property:title",
+    "text": "Committed on Branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Discard",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Open changed file",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Open committed change",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Stage",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Unstage",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-expression",
+    "text": "Committed changes unavailable.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-expression",
+    "text": "Unresolved conflict",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-text",
+    "text": "Committed on Branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-text",
+    "text": "from",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlFileRows.tsx",
+    "kind": "jsx-text",
+    "text": "Loading committed changes...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlHeader.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Back to session",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlHeader.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Close source control",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlHeader.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "on the web",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlHeader.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Open pull request #",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlHeader.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Open pull request on the web",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlHeader.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Refresh source control",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlHeader.tsx",
+    "kind": "jsx-text",
+    "text": "Source Control",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlModals.tsx",
+    "kind": "jsx-attribute:message",
+    "text": "\"? This cannot be undone.",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlModals.tsx",
+    "kind": "jsx-attribute:message",
+    "text": "Discard changes to \"",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlModals.tsx",
+    "kind": "jsx-attribute:message",
+    "text": "Open it in your browser?",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlModals.tsx",
+    "kind": "jsx-attribute:message",
+    "text": "Open it in your browser?",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlModals.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Discard Change",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlModals.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Pull Request Created",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlModals.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Source Control",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlModals.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Switch Branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlPanel.tsx",
+    "kind": "jsx-expression",
+    "text": "Source Control Unavailable",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlPanel.tsx",
+    "kind": "jsx-expression",
+    "text": "Unable to Load",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlPanel.tsx",
+    "kind": "jsx-text",
+    "text": "Retry",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlPrChip.tsx",
+    "kind": "jsx-text",
+    "text": "Create pull request",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/MobileSourceControlPrChip.tsx",
+    "kind": "jsx-text",
+    "text": "Loading pull request…",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/source-control/use-mobile-source-control-loaders.ts",
+    "kind": "object-property:message",
+    "text": "Update Orca desktop to use Source Control on mobile.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "All",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "Branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "Closed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "GitHub",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "GitLab",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "Jira",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "Linear",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "Merged",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "Name",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "Open",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-smart-source-modes.ts",
+    "kind": "object-property:label",
+    "text": "Smart",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-task-view-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Unresolved issues across the selected sites",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-task-view-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Unresolved issues assigned to you",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-task-view-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Unresolved issues you reported",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-task-view-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Your recently resolved issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Add context",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "lin_api_...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Task title",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Create Workspace In",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Linear Team",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Create an issue in the selected Linear team.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Create an issue in the selected repository.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Origin",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Team",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Upstream",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Connect",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Connect Linear workspace",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Create Issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Description",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "File in",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Issue source",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Linear Settings / Security / New API key",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "New",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Paste a Personal API key to browse issues from that workspace.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Personal API key",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Title",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-create-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Your key is encrypted via the host OS keychain and stored locally.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "GitLab Filter",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "GitLab View",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Jira Filter",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Jira Site",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Linear Filter",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Linear Workspace",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Hidden from cards",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Linear issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Shown on cards",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "All teams",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Change Status",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Choose which Project fields appear on item cards.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Choose which teams appear in Tasks.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Linear Teams",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Loading states...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "No states available",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Project Fields",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "teams",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-filter-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "This view has no extra fields to show.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-list.tsx",
+    "kind": "jsx-expression",
+    "text": "Issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-list.tsx",
+    "kind": "jsx-expression",
+    "text": "Items",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-list.tsx",
+    "kind": "jsx-expression",
+    "text": "Project item",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-list.tsx",
+    "kind": "jsx-expression",
+    "text": "Pull request",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-list.tsx",
+    "kind": "jsx-text",
+    "text": "Browse projects",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-list.tsx",
+    "kind": "jsx-text",
+    "text": "Choose a GitHub project",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-list.tsx",
+    "kind": "jsx-text",
+    "text": "fields",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-list.tsx",
+    "kind": "jsx-text",
+    "text": "No project items",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Add by URL or owner/number",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Search projects",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Choose Project View",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Project Sort",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Project View",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Add",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Adding...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Browse all",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Browse all (loading...)",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Couldn't load projects from",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "No matching projects.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "No more projects.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Some organizations didn't load (",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Choose a project view for the Tasks page.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "GitHub Projects",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "No projects loaded",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Pin",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Pinned",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Recent",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Remove",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Tap to retry.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-project-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Use Add by URL to reach missing projects.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-view-controls.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Open view in GitHub",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-view-controls.tsx",
+    "kind": "jsx-text",
+    "text": "Fields:",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-view-controls.tsx",
+    "kind": "jsx-text",
+    "text": "Sort:",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-github-view-controls.tsx",
+    "kind": "jsx-text",
+    "text": "Source:",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-expression",
+    "text": "Copied",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-expression",
+    "text": "Copy GitHub link",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-expression",
+    "text": "Copy Linear link",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-expression",
+    "text": "Create Workspace",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-expression",
+    "text": "Creating...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-text",
+    "text": "Change status",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-text",
+    "text": "GitHub reports merge conflicts.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-text",
+    "text": "Merge merge request",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-actions.tsx",
+    "kind": "jsx-text",
+    "text": "Merge pull request",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Sub-issue title",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-expression",
+    "text": "jobs",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-expression",
+    "text": "None",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Add sub-issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Assignee",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Assignees",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Checks",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Description",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Discussion",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "No checks found.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "No comments.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "No pipeline runs for this MR.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "No sub-issues.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Open",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Pipeline",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Project",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Refresh",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Rerun all",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Rerun failed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Status",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Sub-issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-content.tsx",
+    "kind": "jsx-text",
+    "text": "Type",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-detail-drawer.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Refresh details",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Add labels, comma separated",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Add usernames, comma separated",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Remove labels, comma separated",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Remove usernames, comma separated",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Title",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-expression",
+    "text": "None",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Assignees",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Labels",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Loading assignees...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Loading labels...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "No assignable users found for this repository.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "No labels in this repository.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Save title",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Title",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Update assignees",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Update labels",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Description",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Request reviewers",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-expression",
+    "text": "Hide",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-expression",
+    "text": "Mark unviewed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-expression",
+    "text": "Mark viewed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-expression",
+    "text": "View",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "Binary file.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "Changed files",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "File contents unavailable.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "Loading reviewers...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "No reviewer suggestions found.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "No reviewers requested.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "Request review",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "Reviewers",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-item-review-sections.tsx",
+    "kind": "jsx-text",
+    "text": "Save description",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-linear-list.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Change status from",
+    "dynamic": true,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-linear-view-controls.tsx",
+    "kind": "jsx-text",
+    "text": "Display",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-linear-view-controls.tsx",
+    "kind": "jsx-text",
+    "text": "Group:",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-linear-view-controls.tsx",
+    "kind": "jsx-text",
+    "text": "Order:",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-display-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Group Linear Issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-display-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Linear View",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-display-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Order Linear Issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-display-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Sort Tasks",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-display-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Display Properties",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-surface.tsx",
+    "kind": "jsx-text",
+    "text": "Browse and start work on your assigned Linear issues directly from Tasks.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-surface.tsx",
+    "kind": "jsx-text",
+    "text": "Connect Linear",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-surface.tsx",
+    "kind": "jsx-text",
+    "text": "Connect your Linear account",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-surface.tsx",
+    "kind": "jsx-text",
+    "text": "This mobile Tasks view needs a newer desktop runtime.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-list-surface.tsx",
+    "kind": "jsx-text",
+    "text": "Update Orca desktop",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "All",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Assigned to me",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Assignee",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Board",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Closed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Completed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Created",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "GitHub",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "GitLab",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Identifier",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Jira",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Labels",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Linear",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "List",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Merged",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Mine",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "My Issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "My Todos",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Needs review",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "No grouping",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Open",
+    "dynamic": false,
+    "count": 3
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Priority",
+    "dynamic": false,
+    "count": 3
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Project MRs",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Projects",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "PRs",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Status",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Team",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:label",
+    "text": "Updated",
+    "dynamic": false,
+    "count": 3
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Any GitLab state",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Assigned and reported issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Assigned and team issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Closed issues and merge requests",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Compact issue rows",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "GitHub issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "GitHub Projects views",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "GitHub pull requests",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Group by repository, then newest activity",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Grouped columns",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Issues and merge requests",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Issues and pull requests",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Issues assigned to you",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Issues created by you",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Merge requests and issues by repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Merged merge requests",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Newest activity first",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Open GitHub issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Open issues across connected workspaces",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Open issues and merge requests",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Open issues assigned to you",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Open pull requests",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Pending GitLab todos",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Pull requests authored by you",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Recently completed issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-options.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Review requests assigned to you",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Edit comment",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Reply",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-expression",
+    "text": "comment",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-expression",
+    "text": "comments",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-expression",
+    "text": "Reopen thread",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-expression",
+    "text": "Resolve thread",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-expression",
+    "text": "Show",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-expression",
+    "text": "thread",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "by",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "Cancel",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "Delete",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "Discussion",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "Edit",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "No comments.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "Reply",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "Resolved",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-comments.tsx",
+    "kind": "jsx-text",
+    "text": "Save",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Close item",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Copied",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Copy GitHub link",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Copy repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Draft issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "No type",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Project item",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Pull request",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Reopen item",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Clear type",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Create Workspace",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "GitHub Project ·",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "is not added to Orca. Add this repository from the desktop app, then refresh mobile Tasks.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Issue type",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Loading issue types...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Merge pull request",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Merge requires this repository in Orca.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "No issue types configured for this repository.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Open in GitHub",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Repository not in Orca",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Status",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Type",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-detail-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Workspaces can only be created from GitHub issues and pull requests.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Number",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Text",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "YYYY-MM-DD",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-expression",
+    "text": "Completed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-expression",
+    "text": "Current & upcoming",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Clear field",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "No iterations available.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Project fields",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-field-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Save field",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Description",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Title",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-expression",
+    "text": "None",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Assignees",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Description",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Labels",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Loading assignees...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Loading labels...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "No assignable users found for this repository.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "No labels in this repository.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Save description",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Save title",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-metadata-editors.tsx",
+    "kind": "jsx-text",
+    "text": "Title",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Request reviewers",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-expression",
+    "text": "Hide",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-expression",
+    "text": "Mark unviewed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-expression",
+    "text": "Mark viewed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-expression",
+    "text": "View",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Binary file.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Changed files",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Checks",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "File contents unavailable.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Loading reviewers...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "No checks found.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "No reviewer suggestions found.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "No reviewers requested.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Refresh",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Request review",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Rerun all",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Rerun failed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-project-review-panels.tsx",
+    "kind": "jsx-text",
+    "text": "Reviewers",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-controls.tsx",
+    "kind": "jsx-expression",
+    "text": "My Todos",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-controls.tsx",
+    "kind": "jsx-expression",
+    "text": "Project MRs",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-controls.tsx",
+    "kind": "jsx-text",
+    "text": "Sort:",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-item-list.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Next page",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-item-list.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "of",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-item-list.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Previous page",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-item-list.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Select page, Page",
+    "dynamic": true,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-item-list.tsx",
+    "kind": "jsx-expression",
+    "text": "of",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-item-list.tsx",
+    "kind": "jsx-expression",
+    "text": "Page",
+    "dynamic": true,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-item-list.tsx",
+    "kind": "jsx-text",
+    "text": "into",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "GitHub View",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Issues",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Pull Requests",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Task Source",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Loaded",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Loads older results",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Origin",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-expression",
+    "text": "Upstream",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "All repositories",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Choose whether each repository queries and creates work from upstream or origin.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Choose which repositories to query.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "GitHub Issue Sources",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "GitHub Pages",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Jump to a loaded or available result page.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "No alternate issue sources available.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Page",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Querying",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-provider-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Repositories",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-reviewer-linear.ts",
+    "kind": "object-property:label",
+    "text": "Issues",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-screen-chrome.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Back",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-screen-chrome.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Connect Linear",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-screen-chrome.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "New GitHub issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-screen-chrome.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "New Linear issue",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-screen-chrome.tsx",
+    "kind": "jsx-text",
+    "text": "Tasks",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-search-control.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Jira JQL, e.g. project = ABC AND statusCategory != Done",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-search-control.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Search",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-search-control.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Search project view...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-search-control.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "tasks...",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Agent",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Add a Git repository before creating a Linear workspace.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Connect",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Connect Repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Connect repository first",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Connecting...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Create Workspace",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Default branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Detecting agents...",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Remote repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Repository not found.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-expression",
+    "text": "Select a repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "[Optional]",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Advanced",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Agent",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Create from",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Create Workspace",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "SSH Connection",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Start from",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-create-drawer.tsx",
+    "kind": "jsx-text",
+    "text": "Workspace Name",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Edit",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Search branches",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Branch name:",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Default branch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Full checkout",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "New preset",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "No branches match.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Pick an existing branch or ref.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Sparse Checkout",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Start From",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Use the whole repository",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-option-pickers.tsx",
+    "kind": "jsx-text",
+    "text": "Use this repository's configured base",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Renderer UI",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "src/renderer packages/ui",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "'s setup script changed",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "1 directory",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Creating...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "directories",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Edit Sparse Preset",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "New setup script",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "New Sparse Preset",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Run setup and create",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Run setup from",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-expression",
+    "text": "Setup script",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Always trust and run",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Cancel",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Directories",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Don't run",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Name",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "requires a setup choice before creating this workspace.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Run hooks",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Run Setup Script?",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Save",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "Skip setup and create",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/mobile-tasks-workspace-trust-drawers.tsx",
+    "kind": "jsx-text",
+    "text": "This repository's orca.yaml runs on your machine before the workspace starts. Only run it if you trust this repository.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Retry loading issues from",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-attribute:message",
+    "text": "Choose how this merge request should be merged.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-attribute:message",
+    "text": "Choose how this pull request should be merged.",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Merge method",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Merge Pull Request",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Merge Request",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-attribute:title",
+    "text": "Update Item",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-expression",
+    "text": "Retry",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-expression",
+    "text": "Retrying...",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-text",
+    "text": ". Using origin.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-text",
+    "text": "Couldn't load issues from",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-text",
+    "text": "Preferred issue source upstream is unavailable for",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksLegacySurface.tsx",
+    "kind": "jsx-text",
+    "text": "Sub-issue data is unavailable for your token.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksPrFileDiff.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Add review comment",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksPrFileDiff.tsx",
+    "kind": "jsx-text",
+    "text": "Comment on line",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksPrFileDiff.tsx",
+    "kind": "jsx-text",
+    "text": "diff lines.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksPrFileDiff.tsx",
+    "kind": "jsx-text",
+    "text": "No text changes found.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksPrFileDiff.tsx",
+    "kind": "jsx-text",
+    "text": "of",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/MobileTasksPrFileDiff.tsx",
+    "kind": "jsx-text",
+    "text": "Showing first",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/sparse-preset-draft.ts",
+    "kind": "object-property:error",
+    "text": "Add at least one directory.",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/sparse-preset-draft.ts",
+    "kind": "object-property:error",
+    "text": "Use repo-relative directories, not root, absolute paths, or parent segments.",
+    "dynamic": false,
+    "count": 2
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-attribute:accessibilityLabel",
+    "text": "Send comment",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Add a comment",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-attribute:placeholder",
+    "text": "Reply",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-expression",
+    "text": "comment",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-expression",
+    "text": "comments",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-expression",
+    "text": "Reopen thread",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-expression",
+    "text": "Resolve thread",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-expression",
+    "text": "Show",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-expression",
+    "text": "thread",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-text",
+    "text": "by",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-text",
+    "text": "Reply",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-detail-comment-renderers.tsx",
+    "kind": "jsx-text",
+    "text": "Resolved",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-picker-projection.tsx",
+    "kind": "object-property:label",
+    "text": "All sites",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-picker-projection.tsx",
+    "kind": "object-property:label",
+    "text": "View order",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-provider-view-projection.tsx",
+    "kind": "object-property:label",
+    "text": "All workspaces",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/tasks/use-mobile-tasks-workspace-create-projection.tsx",
+    "kind": "object-property:subtitle",
+    "text": "Open a shell",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:accessibilityLabel",
+    "text": "Backspace",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:accessibilityLabel",
+    "text": "Enter",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:accessibilityLabel",
+    "text": "Escape",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:accessibilityLabel",
+    "text": "Shift Tab",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:accessibilityLabel",
+    "text": "Space",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:accessibilityLabel",
+    "text": "Tab",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+A",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+C",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+D",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+E",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+L",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+R",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+U",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+W",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Ctrl+Z",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Del",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Enter",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Esc",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Shift+Tab",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Space",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/terminal/terminal-key-definitions.ts",
+    "kind": "object-property:label",
+    "text": "Tab",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/host-entry-opener.ts",
+    "kind": "object-property:message",
+    "text": "Host client open failed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/host-entry-opener.ts",
+    "kind": "object-property:message",
+    "text": "Host client recovered",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/mobile-relay-host-overlay.ts",
+    "kind": "object-property:message",
+    "text": "Expected exactly one endpoint for configured relay metadata",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/mobile-relay-host-overlay.ts",
+    "kind": "object-property:message",
+    "text": "Relay host identity mismatch",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/mobile-relay-host-overlay.ts",
+    "kind": "object-property:message",
+    "text": "Relay identity and endpoint must coexist",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/mobile-relay-recovery-log.ts",
+    "kind": "object-property:message",
+    "text": "Relay:",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/mobile-relay-rpc-session.ts",
+    "kind": "object-property:message",
+    "text": "Relay health check failed",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/mobile-web-bundle-reply-schemas.ts",
+    "kind": "object-property:message",
+    "text": "assets sum to more than the contract total",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/mobile-web-bundle-reply-schemas.ts",
+    "kind": "object-property:message",
+    "text": "buildId must be the content hash of the asset list",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/persisted-connection-log-store.ts",
+    "kind": "object-property:message",
+    "text": "Mobile client session started",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/rpc-operation-reply.ts",
+    "kind": "object-property:message",
+    "text": "not a non-null object",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/rpc-operation-reply.ts",
+    "kind": "object-property:message",
+    "text": "reply opened no stream",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/rpc-operation-result-reader.ts",
+    "kind": "object-property:message",
+    "text": "further issues omitted",
+    "dynamic": true,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/socket-deadline-suspension.ts",
+    "kind": "object-property:title",
+    "text": "Handshake timeout",
+    "dynamic": false,
+    "count": 1
+  },
+  {
+    "filePath": "mobile/src/transport/socket-deadline-suspension.ts",
+    "kind": "object-property:title",
+    "text": "WebSocket connect timeout",
+    "dynamic": false,
+    "count": 1
+  }
+]

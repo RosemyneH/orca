@@ -15,7 +15,7 @@ import type { ClaudeAgentTeamsMode } from './claude-agent-teams-tmux-compat'
 import type { TerminalCustomTheme } from './terminal-custom-themes'
 import type { UiLanguage } from './ui-language'
 import type { GlobalWindowsRuntimeDefault } from './project-execution-runtime'
-import type { PersistedNativeChatSessionOptions } from './native-chat-session-options'
+import type { PersistedNativeChatSessionOptions } from './native-chat/input/native-chat-session-options'
 import type { AgentChatPermissionMode } from './agent-chat-permission-mode'
 import type { ComputerAwakeMode } from './computer-awake-mode'
 import type { CommitMessageAiSettings } from './commit-message-ai-types'
@@ -330,14 +330,6 @@ export type GlobalSettings = GlobalSettingsBase & {
   newWorkspaceSetupOnly?: boolean
   /** Agents hidden from picker/auto-launch; detection stays a raw PATH snapshot. */
   disabledTuiAgents: TuiAgent[]
-  /** Experimental plugin master switch; off prevents discovery, panels and plugin execution. */
-  pluginSystemEnabled: boolean
-  /** Disabled publisher.id keys remain discoverable but inactive. */
-  disabledPlugins: string[]
-  /** publisher.id → consented capability/worker-trust fingerprint; changes prompt again before code runs. Missing means never consented. */
-  pluginConsents: Record<string, string>
-  /** Local directories loaded as dev-mode plugins (manifest hot-reload). */
-  devPluginPaths: string[]
   /** One-shot guard: start Claude Agent Teams hidden for existing profiles without overriding later opt-ins. */
   claudeAgentTeamsDefaultDisabledMigrated?: boolean
   /** One-shot guard: hosts saved before the remote CLI control default flip were pinned off. */

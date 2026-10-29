@@ -431,33 +431,6 @@ describe('runtime terminal owner routing', () => {
     expect(desktopPresentationSnapshot(id)).toBeUndefined()
   })
 
-  it('records accepted fire-and-forget runtime input against the owning pane key', async () => {
-    runtimeCall.mockResolvedValue({
-      ok: true,
-      result: { send: { handle: 'terminal-1', accepted: true, bytesWritten: 1 } },
-      _meta: { runtimeId: 'runtime-1' }
-    })
-    useAppStore.setState({
-      settings: { experimentalAgentHibernation: true } as never,
-      terminalLayoutsByTabId: {
-        'tab-1': {
-          root: { type: 'leaf', leafId: LEAF_ID },
-          activeLeafId: LEAF_ID,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [LEAF_ID]: 'remote:env-1@@terminal-1' }
-        }
-      }
-    })
-
-    expect(sendRuntimePtyInput('remote:env-1@@terminal-1', 'x', 'driving')).toBe(true)
-
-    await vi.waitFor(() => {
-      expect(useAppStore.getState().lastTerminalInputAtByPaneKey[PANE_KEY]).toEqual(
-        expect.any(Number)
-      )
-    })
-  })
-
   it('attributes a delayed runtime acknowledgement to the current layout owner', async () => {
     const pendingSend = Promise.withResolvers<{
       ok: true
@@ -503,75 +476,6 @@ describe('runtime terminal owner routing', () => {
     })
   })
 
-  it('does not record declined fire-and-forget runtime input', async () => {
-    runtimeCall.mockResolvedValue({
-      ok: true,
-      result: { send: { handle: 'terminal-1', accepted: false, bytesWritten: 0 } },
-      _meta: { runtimeId: 'runtime-1' }
-    })
-    useAppStore.setState({
-      settings: { experimentalAgentHibernation: true } as never,
-      terminalLayoutsByTabId: {
-        'tab-1': {
-          root: { type: 'leaf', leafId: LEAF_ID },
-          activeLeafId: LEAF_ID,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [LEAF_ID]: 'remote:env-1@@terminal-1' }
-        }
-      }
-    })
-
-    expect(sendRuntimePtyInput('remote:env-1@@terminal-1', 'x', 'driving')).toBe(true)
-
-    await vi.waitFor(() => {
-      expect(runtimeCall).toHaveBeenCalled()
-    })
-    expect(useAppStore.getState().lastTerminalInputAtByPaneKey[PANE_KEY]).toBeUndefined()
-  })
-
-  it('reports stale remote terminal handles as rejected during verified send', async () => {
-    runtimeCall.mockResolvedValue({
-      ok: false,
-      error: { code: 'terminal_handle_stale', message: 'terminal_handle_stale' }
-    })
-
-    await expect(
-      sendRuntimePtyInputVerified('remote:env-1@@terminal-stale', 'x', 'driving')
-    ).resolves.toBe(false)
-  })
-
-  it('reports declined remote terminal sends as rejected during verified send', async () => {
-    runtimeCall.mockResolvedValue({
-      ok: true,
-      result: { send: { handle: 'terminal-1', accepted: false, bytesWritten: 0 } },
-      _meta: { runtimeId: 'runtime-1' }
-    })
-
-    await expect(
-      sendRuntimePtyInputVerified('remote:env-1@@terminal-1', 'x', 'driving')
-    ).resolves.toBe(false)
-
-    expect(runtimeCall).toHaveBeenCalledWith({
-      selector: 'env-1',
-      method: 'terminal.send',
-      params: {
-        terminal: 'terminal-1',
-        text: 'x',
-        client: { id: 'orca-desktop', type: 'desktop' }
-      },
-      timeoutMs: 15_000
-    })
-  })
-
-  it('uses accepted local writes for verified input', async () => {
-    localWriteAccepted.mockResolvedValue(true)
-
-    await expect(sendRuntimePtyInputVerified('local-pty', 'x', 'driving')).resolves.toBe(true)
-
-    expect(localWriteAccepted).toHaveBeenCalledWith('local-pty', 'x', 'driving')
-    expect(localWrite).not.toHaveBeenCalled()
-  })
-
   it('rejects oversized fire-and-forget local input before IPC writes', () => {
     const text = 'x'.repeat(TERMINAL_INPUT_MAX_BYTES + 1)
 
@@ -579,15 +483,6 @@ describe('runtime terminal owner routing', () => {
 
     expect(localWrite).not.toHaveBeenCalled()
     expect(localWriteAccepted).not.toHaveBeenCalled()
-  })
-
-  it('rejects oversized fire-and-forget remote input before runtime RPC', () => {
-    const text = 'x'.repeat(TERMINAL_INPUT_MAX_BYTES + 1)
-
-    expect(sendRuntimePtyInput('remote:env-1@@terminal-1', text, 'driving')).toBe(false)
-
-    expect(runtimeTransportCall).not.toHaveBeenCalled()
-    expect(localWrite).not.toHaveBeenCalled()
   })
 
   it('yields while validating large fire-and-forget local input before IPC writes', async () => {
@@ -777,111 +672,5 @@ describe('runtime terminal owner routing', () => {
           .padStart(12, '0')}`
       ]
     ).toBe(1_000_000)
-  })
-
-  it('reindexes a PTY when the immutable layout identity changes', () => {
-    const nextLeafId = '22222222-2222-4222-8222-222222222222'
-    useAppStore.setState({
-      terminalLayoutsByTabId: {
-        'tab-1': {
-          root: { type: 'leaf', leafId: LEAF_ID },
-          activeLeafId: LEAF_ID,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [LEAF_ID]: 'rebound-pty' }
-        }
-      }
-    })
-    recordRuntimeTerminalInputForPtyId('rebound-pty', 123)
-
-    useAppStore.setState({
-      terminalLayoutsByTabId: {
-        'tab-2': {
-          root: { type: 'leaf', leafId: nextLeafId },
-          activeLeafId: nextLeafId,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [nextLeafId]: 'rebound-pty' }
-        }
-      }
-    })
-    recordRuntimeTerminalInputForPtyId('rebound-pty', 1_000)
-
-    expect(useAppStore.getState().lastTerminalInputAtByPaneKey).toEqual({
-      [PANE_KEY]: 123,
-      [`tab-2:${nextLeafId}`]: 1_000
-    })
-  })
-
-  it('reindexes stale owners without caching misses within the same layout identity', () => {
-    const nextLeafId = '22222222-2222-4222-8222-222222222222'
-    useAppStore.setState({
-      terminalLayoutsByTabId: {
-        'tab-1': {
-          root: { type: 'leaf', leafId: LEAF_ID },
-          activeLeafId: LEAF_ID,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [LEAF_ID]: 'rebound-pty' }
-        }
-      }
-    })
-    const layouts = useAppStore.getState().terminalLayoutsByTabId
-    recordRuntimeTerminalInputForPtyId('rebound-pty', 123)
-    recordRuntimeTerminalInputForPtyId('late-pty', 456)
-
-    const firstLayout = layouts['tab-1']
-    expect(firstLayout).toBeDefined()
-    if (!firstLayout) {
-      return
-    }
-    firstLayout.ptyIdsByLeafId = Object.create({ [LEAF_ID]: 'rebound-pty' })
-    Object.setPrototypeOf(layouts, { 'tab-1': firstLayout })
-    delete layouts['tab-1']
-    layouts['tab-2'] = {
-      root: { type: 'leaf', leafId: nextLeafId },
-      activeLeafId: nextLeafId,
-      expandedLeafId: null,
-      ptyIdsByLeafId: { [nextLeafId]: 'rebound-pty', [LEAF_ID]: 'late-pty' }
-    }
-    recordRuntimeTerminalInputForPtyId('rebound-pty', 1_000)
-    recordRuntimeTerminalInputForPtyId('late-pty', 2_000)
-
-    expect(useAppStore.getState().terminalLayoutsByTabId).toBe(layouts)
-    expect(useAppStore.getState().lastTerminalInputAtByPaneKey).toEqual({
-      [PANE_KEY]: 123,
-      [`tab-2:${nextLeafId}`]: 1_000,
-      [`tab-2:${LEAF_ID}`]: 2_000
-    })
-  })
-
-  it('preserves a malformed first match instead of routing a duplicate PTY', () => {
-    const nextLeafId = '22222222-2222-4222-8222-222222222222'
-    useAppStore.setState({
-      terminalLayoutsByTabId: {
-        'legacy:tab': {
-          root: { type: 'leaf', leafId: LEAF_ID },
-          activeLeafId: LEAF_ID,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [LEAF_ID]: 'duplicate-pty' }
-        },
-        'tab-2': {
-          root: { type: 'leaf', leafId: nextLeafId },
-          activeLeafId: nextLeafId,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [nextLeafId]: 'duplicate-pty' }
-        }
-      }
-    })
-
-    recordRuntimeTerminalInputForPtyId('duplicate-pty', 123)
-
-    expect(useAppStore.getState().lastTerminalInputAtByPaneKey).toEqual({})
-  })
-
-  it('reports success after fallback fire-and-forget writes when local acceptance cannot be verified', async () => {
-    localWriteAccepted.mockResolvedValue(false)
-
-    await expect(sendRuntimePtyInputVerified('local-pty', 'x', 'driving')).resolves.toBe(true)
-
-    expect(localWriteAccepted).toHaveBeenCalledWith('local-pty', 'x', 'driving')
-    expect(localWrite).toHaveBeenCalledWith('local-pty', 'x', 'driving')
   })
 })

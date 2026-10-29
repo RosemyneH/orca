@@ -20,6 +20,7 @@ const LOCALES = 'src/renderer/src/i18n/'
 
 // Ratchets default to SOURCE_ROOTS; list narrower inputs only where a scan is clearly scoped.
 const RATCHET_INPUTS = {
+  'check-daemon-blocking-call-ratchet.mjs': ['src/main/'],
   'check-e2e-typecheck-ratchet.mjs': ['tests/', 'config/tsconfig.e2e.json'],
   'check-focus-read-ratchet.mjs': ['src/renderer/src/', 'src/shared/'],
   'check-host-list-render-ratchet.mjs': ['src/renderer/src/'],
@@ -67,6 +68,44 @@ export const VERIFY_CHECKS = [
     runtime: 'bun',
     args: ['config/scripts/audit-localization-coverage.mjs', '--check'],
     inputs: ['src/renderer/src/', LOCALES]
+  },
+  {
+    name: 'mobile localization',
+    args: ['config/scripts/verify-mobile-localization.mjs'],
+    inputs: [
+      'mobile/app/',
+      'mobile/src/',
+      'mobile/web-entry/',
+      'mobile/app.json',
+      'mobile/locales/',
+      'src/shared/ui-locale',
+      'config/scripts/verify-mobile-localization',
+      'config/scripts/verify-localization-',
+      'config/scripts/generate-runtime-required-english-catalog',
+      'config/scripts/localization-surfaces'
+    ]
+  },
+  {
+    name: 'mobile localization coverage',
+    args: [
+      'config/scripts/audit-localization-coverage.mjs',
+      '--check',
+      '--source-root',
+      'mobile/app',
+      '--source-root',
+      'mobile/src',
+      '--source-root',
+      'mobile/web-entry',
+      '--allowlist',
+      'config/mobile-localization-coverage-allowlist.json'
+    ],
+    inputs: [
+      'mobile/app/',
+      'mobile/src/',
+      'mobile/web-entry/',
+      'config/mobile-localization-coverage-allowlist.json',
+      'config/scripts/audit-localization-coverage'
+    ]
   },
   {
     // CI's own predicate, so local and CI select this check identically.
@@ -168,6 +207,14 @@ export function selectTypecheckProjects(files) {
   ).map(({ config }) => config)
 }
 
+// Shared analysis modules select every ratchet built on them.
+const RATCHET_SHARED_MODULES = {
+  'config/scripts/gated-call-use-collector.mjs': [
+    'check-daemon-blocking-call-ratchet.mjs',
+    'check-main-sync-spawn-ratchet.mjs'
+  ]
+}
+
 function listRatchetChecks(scriptsDir) {
   const scripts = new Set(listRatchetScripts(scriptsDir))
   // `pnpm lint` runs these although CI checks them in their own steps outside run-ratchets.mjs.
@@ -177,7 +224,12 @@ function listRatchetChecks(scriptsDir) {
     name: script.replace(/^check-|\.mjs$/g, ''),
     args: [`config/scripts/${script}`],
     inputs: RATCHET_INPUTS[script] ?? SOURCE_ROOTS,
-    matches: (files) => files.some((file) => /^config\/[^/]+-baseline\.txt$/.test(file))
+    matches: (files) =>
+      files.some(
+        (file) =>
+          /^config\/[^/]+-baseline\.txt$/.test(file) ||
+          RATCHET_SHARED_MODULES[file]?.includes(script)
+      )
   }))
 }
 

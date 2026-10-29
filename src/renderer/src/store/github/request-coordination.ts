@@ -17,6 +17,8 @@ export type InflightChecks = {
   requestId: number
   force: boolean
   noCache: boolean
+  /** A user act's request may start a stopped WSL distro; a poll's would be refused. */
+  wakeWslDistro?: boolean
 }
 export type InflightWorkItems = {
   promise: Promise<readonly GitHubWorkItem[]>
@@ -24,6 +26,7 @@ export type InflightWorkItems = {
   force: boolean
   noCache: boolean
   requireComplete: boolean
+  wakeWslDistro?: boolean
 }
 export type InflightProjectView = {
   promise: Promise<GetProjectViewTableResult>

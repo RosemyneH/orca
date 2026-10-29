@@ -9,7 +9,7 @@ export type StreamRecord = {
   method: string
   params: unknown
   envelope?: RpcEnvelopeFields
-  listener: (result: unknown, metadata?: RpcResponse['_meta']) => void
+  listener?: (result: unknown, metadata?: RpcResponse['_meta']) => void
   onBinaryFrame?: Parameters<RpcClient['subscribe']>[3] extends
     | { onBinaryFrame?: infer Listener }
     | undefined

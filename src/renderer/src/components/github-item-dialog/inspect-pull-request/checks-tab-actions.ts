@@ -62,7 +62,7 @@ export async function refreshGitHubChecksTab(
   ctx.activeChecksRefreshRequestIdRef.current = refreshRequestId
   ctx.setRefreshingOwner({ contextOwner: refreshContextOwner, requestId: refreshRequestId })
   try {
-    const nextChecks = (await (ctx.runtimeHost
+    const nextChecks = await (ctx.runtimeHost
       ? callRuntimeRpc<PRCheckDetail[]>(
           { kind: 'environment', environmentId: ctx.runtimeHost.environmentId },
           'github.prChecks',
@@ -82,8 +82,10 @@ export async function refreshGitHubChecksTab(
           prNumber: ctx.itemNumber,
           headSha: ctx.headSha,
           prRepo: ctx.prRepo,
-          noCache: true
-        }))) as PRCheckDetail[]
+          noCache: true,
+          // Refresh and rerun are user acts: they may start a stopped WSL distro.
+          wakeWslDistro: true
+        }))
     if (
       !ctx.mountedRef.current ||
       ctx.committedChecksContextOwnerRef.current !== refreshContextOwner ||

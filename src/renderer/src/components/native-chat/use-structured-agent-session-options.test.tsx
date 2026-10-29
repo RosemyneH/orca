@@ -28,7 +28,7 @@ vi.mock('@/lib/structured-agent-session-launch-options', () => ({
   getStructuredAgentSessionLaunchSelection: () => null
 }))
 
-import type { SessionOptionDescriptor } from '../../../../shared/native-chat-session-options'
+import type { SessionOptionDescriptor } from '../../../../shared/native-chat/input/native-chat-session-options'
 import type { StructuredAgentSessionMutate } from './use-structured-agent-session-mutate'
 import { useStructuredAgentSessionOptions } from './use-structured-agent-session-options'
 import { structuredAgentSessionSendSelection } from '../../../../shared/structured-agent-session-option-view'
@@ -318,12 +318,7 @@ describe('useStructuredAgentSessionOptions', () => {
         accepted = await result.current.setStructuredOption('model', 'gpt-5.6-luna')
       })
       expect(accepted).toBe(true)
-      expect(mocks.hold).toHaveBeenCalledWith(
-        'session-1',
-        'model',
-        'gpt-5.6-luna',
-        expect.anything()
-      )
+      expect(mocks.hold).toHaveBeenCalledWith('session-1', 'model', 'gpt-5.6-luna')
       rerender({ ...PROVISIONAL, launchSeedOptions: SEED, heldOptions: { model: 'gpt-5.6-luna' } })
       expect(currentValue(result.current.optionSnapshot, 'model')).toBe('gpt-5.6-luna')
       expect(descriptor(result.current.optionSnapshot, 'model')?.valueSource).toBe('dispatched')
@@ -629,7 +624,7 @@ describe('useStructuredAgentSessionOptions', () => {
       await act(async () => {
         await result.current.setStructuredOption('model', 'gpt-hosted')
       })
-      expect(mocks.hold).toHaveBeenCalledWith('session-1', 'model', 'gpt-hosted', expect.anything())
+      expect(mocks.hold).toHaveBeenCalledWith('session-1', 'model', 'gpt-hosted')
       unmount()
     })
 

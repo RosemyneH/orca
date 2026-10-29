@@ -67,6 +67,8 @@ export type TerminalCreateOptions = {
   terminalKittyKeyboardProtocol?: boolean
   terminalImageViewerSupported?: boolean
   terminalColorQueryReplies?: TerminalOscColorQueryReplyColors
+  /** Unvalidated wire value: the creator's palette and cursor, pinned with its colours on a windowed host. */
+  terminalViewAttributes?: unknown
   viewMode?: 'terminal' | 'chat'
   /** The tab group a background create joins; defaults to the first group. */
   targetGroupId?: string
@@ -262,6 +264,8 @@ export type RuntimeProviderSnapshotReadOptions = {
 export type RuntimeAgentPromptWriteOptions = Omit<RuntimeTerminalWriteOptions, 'inputKind'> & {
   /** `launch` for the prompt an agent starts with; `driving` for any prompt sent to a running one. */
   inputKind: Exclude<TerminalInputKind, 'query-reply'>
+  /** Caller observation may end without cancelling a paste already accepted by the host. */
+  observationSignal?: AbortSignal
   /** Raw prompt text for submit scheduling; not written, only used for line-aware delays. */
   promptForSchedule?: string
   /** Caller observed composer input acceptance; schedule Enter using desktop draft-paste timing instead of render settlement. */

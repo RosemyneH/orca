@@ -27,7 +27,9 @@ import { DEFAULT_AGENT_ACTIVITY_DISPLAY_MODE } from '../../../../shared/constant
 import { revealElementInScrollContainer } from './worktree-sidebar-reveal'
 import { useWorktreeAgentExpansionState } from './worktree-card-agents-expansion-state'
 import { translate } from '@/i18n/i18n'
+import { useUiLanguageRevision } from '@/i18n/use-ui-language-revision'
 import { activateStructuredAgentSessionTab } from '@/lib/agent-session/structured-agent-session-tab-activation'
+import { activateRetainedAgentRow } from './activate-retained-agent-row'
 import { selectAgentRowsUnread } from './worktree-card-agent-ack-inputs'
 
 export const SUPPRESS_WORKTREE_LIST_SCROLL_ADJUSTMENT_EVENT =
@@ -57,6 +59,7 @@ const WorktreeCardAgents = React.memo(function WorktreeCardAgents({
   agents: precomputedAgents,
   className
 }: Props) {
+  useUiLanguageRevision()
   const selectedAgents = useWorktreeAgentRows(worktreeId, precomputedAgents === undefined)
   const agents = precomputedAgents ?? selectedAgents
   if (agents.length === 0) {
@@ -77,6 +80,7 @@ const WorktreeCardAgentsBody = React.memo(function WorktreeCardAgentsBody({
   agents,
   className
 }: BodyProps) {
+  useUiLanguageRevision()
   const agentActivityDisplayMode =
     useAppStore((s) => s.agentActivityDisplayMode) ?? DEFAULT_AGENT_ACTIVITY_DISPLAY_MODE
   const dropAgentStatus = useAppStore((s) => s.dropAgentStatus)
@@ -185,9 +189,10 @@ const WorktreeCardAgentsBody = React.memo(function WorktreeCardAgentsBody({
     },
     [worktreeId]
   )
-  const handleActivateRetainedAgent = useCallback(() => {
-    // Retained rows are completion evidence; activation would resume sleeping sessions, so keep them inert.
-  }, [])
+  const handleActivateRetainedAgent = useCallback(
+    (tabId: string, paneKey: string) => activateRetainedAgentRow(worktreeId, tabId, paneKey),
+    [worktreeId]
+  )
 
   const now = useNow(30_000)
   const { rootRows: rootAgents, childrenByParentPaneKey } = useMemo(
@@ -244,7 +249,10 @@ const WorktreeCardAgentsBody = React.memo(function WorktreeCardAgentsBody({
     const sendTarget = isAgentSendTargetModeActive
       ? (sendTargetsByPaneKey.get(agent.paneKey) ?? {
           status: 'disabled' as const,
-          disabledReason: 'Agent is not available'
+          disabledReason: translate(
+            'auto.components.sidebar.WorktreeCardAgents.agentUnavailable',
+            'Agent is not available'
+          )
         })
       : undefined
     const descendantAncestorPaneKeys = new Set(ancestorPaneKeys)
@@ -301,7 +309,10 @@ const WorktreeCardAgentsBody = React.memo(function WorktreeCardAgentsBody({
     const sendTarget = isAgentSendTargetModeActive
       ? (sendTargetsByPaneKey.get(agent.paneKey) ?? {
           status: 'disabled' as const,
-          disabledReason: 'Agent is not available'
+          disabledReason: translate(
+            'auto.components.sidebar.WorktreeCardAgents.agentUnavailable',
+            'Agent is not available'
+          )
         })
       : undefined
     const descendantAncestorPaneKeys = new Set(ancestorPaneKeys)

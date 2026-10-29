@@ -6,7 +6,7 @@ import { selectTerminalTabAgentTypesByLeaf } from './terminal-tab-agent-type-ind
 import { collectLeafIdsInOrder, EMPTY_LAYOUT } from './layout-serialization'
 import { sanitizeTerminalLayoutPaneTitles } from '../../../../shared/terminal-pane-title-sanitization'
 import { resolveNativeChatLeafTitleAgent } from './native-chat-leaf-title-agent'
-import { canToggleNativeChat } from '../native-chat/native-chat-availability'
+import { canToggleNativeChat } from '../../../../shared/native-chat-availability'
 import { nativeChatLaunchAgentForLeaf } from '../native-chat/native-chat-leaf-routing'
 import type { TerminalPaneTitleController } from './use-terminal-pane-title-state'
 

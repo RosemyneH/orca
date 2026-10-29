@@ -2,15 +2,18 @@ import { accessSync, constants, existsSync, readFileSync, readdirSync, statSync 
 import { homedir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join } from 'node:path'
 import { firstWindowsPathEnvKey, isNativeExecutable } from './cli-runtime-pairing-inputs'
+import { getFnmDefaultAliasDirectories } from './fnm-default-alias-dirs'
 import { getSystemCliInstallDirectories } from './system-cli-install-dirs'
 
 type ResolveCommandOptions = {
   pathEnv?: string | null
   platform?: NodeJS.Platform
   homePath?: string
+  /** Skip the PATH scan; the caller already established absence there (agent detection batches it). */
+  skipPathSearch?: boolean
 }
 
-function getExecutableNames(platform: NodeJS.Platform, commandName: string): string[] {
+export function getExecutableNames(platform: NodeJS.Platform, commandName: string): string[] {
   if (platform === 'win32') {
     return [`${commandName}.cmd`, `${commandName}.exe`, `${commandName}.bat`, commandName]
   }
@@ -93,7 +96,7 @@ function getBaseVersionManagerDirectories(platform: NodeJS.Platform, homePath: s
   const directories = [
     join(homePath, '.volta', 'bin'),
     join(homePath, '.asdf', 'shims'),
-    join(homePath, '.fnm', 'aliases', 'default', 'bin'),
+    ...getFnmDefaultAliasDirectories(platform, homePath),
     join(homePath, '.local', 'share', 'mise', 'shims')
   ]
 
@@ -287,7 +290,9 @@ export function resolveCliCommands(
 
   for (const commandName of new Set(commandNames)) {
     const executableNames = getExecutableNames(platform, commandName)
-    const pathCandidate = findFirstExecutable(platform, pathDirectories, executableNames)
+    const pathCandidate = options.skipPathSearch
+      ? undefined
+      : findFirstExecutable(platform, pathDirectories, executableNames)
     const installCandidate =
       pathCandidate ?? findFirstExecutable(platform, installDirectories, executableNames)
     resolved.set(commandName, installCandidate ?? commandName)

@@ -138,7 +138,14 @@ export function handleGlobalSessionInventoryEvent({
         decisions[index]!.apply ? [snapshot] : []
       )
       settleHydration = applyWebSessionTabsStorePatch(
-        (state) => applyWebSessionTabsSnapshots(state, freshSnapshots, environmentId),
+        (state, changedAgentPaneKeys) =>
+          applyWebSessionTabsSnapshots(
+            state,
+            freshSnapshots,
+            environmentId,
+            undefined,
+            changedAgentPaneKeys
+          ),
         {
           frames: applicable.map(({ snapshot, index: originalIndex }, index) => ({
             environmentId,
