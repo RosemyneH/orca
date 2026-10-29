@@ -40,6 +40,7 @@ import { wslHostsServing } from './wsl/wsl-host-gate'
 import { configureWslHostsGateFromDisk } from './wsl/wsl-host-gate-startup'
 import { ignoreInheritedWslHostsGateState } from '../shared/wsl-host-internal-gate'
 import { registerOrcaProtocolClient } from './startup/orca-protocol-registration'
+import { clearWindowsStdHandleInheritance } from './startup/windows-std-handle-inheritance'
 
 function openMainWindow(options: { revealOnDidFinishLoad?: boolean } = {}): BrowserWindow {
   return openMainWindowController(options)
@@ -107,6 +108,8 @@ const handleMacAppActivation = createMacAppActivationHandler({
   requestActivation: requestDesktopActivation
 })
 
+// Before anything spawns: no child may inherit Orca's std handles.
+clearWindowsStdHandleInheritance()
 // A relaunch or installer inherits the parent's published WSL gate state; this process recomputes.
 ignoreInheritedWslHostsGateState()
 // The uninstaller's holder release and hook removal run instead of the app, never alongside it.
