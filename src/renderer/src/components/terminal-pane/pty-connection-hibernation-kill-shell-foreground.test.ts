@@ -242,7 +242,8 @@ describe('shell showing through a hibernation kill', () => {
       pane.finishCommand()
       await vi.advanceTimersByTimeAsync(350)
       expect(window.api.pty.confirmForegroundProcess).toHaveBeenCalledExactlyOnceWith(
-        'pty-hibernating'
+        'pty-hibernating',
+        { includePresentation: true }
       )
       pane.exitPty()
       pane.rebindPty(boundPtyId)

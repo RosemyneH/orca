@@ -1,4 +1,4 @@
-import { retractDesktopPresentations } from '../terminal-foreground-presentation'
+import { createDesktopPresentationSource } from '../terminal-foreground-presentation'
 import { LOCAL_STRUCTURED_SESSION_OWNER } from '../local-structured-session-owner'
 import { LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host'
 import { STRUCTURED_AGENT_SESSION_RUNTIME_CAPABILITY } from '../../../../shared/protocol-version'
@@ -39,16 +39,37 @@ export async function startLocalStructuredSessionTabsSync(args: {
   const syncGeneration = localStructuredSessionGeneration()
   const isCurrent = (): boolean =>
     !args.isDisposed() && isCurrentLocalStructuredSessionGeneration(syncGeneration)
-  const capabilities = await refreshLocalRuntimeCapabilities()
+  let presentationSource = createDesktopPresentationSource(
+    LOCAL_STRUCTURED_SESSION_OWNER,
+    'subscription',
+    isCurrent
+  )
+  args.setUnsubscribe(() => presentationSource.dispose())
+  const initialSource = presentationSource
+  let capabilities: Awaited<ReturnType<typeof refreshLocalRuntimeCapabilities>>
+  try {
+    capabilities = await refreshLocalRuntimeCapabilities()
+  } catch (error) {
+    initialSource.dispose()
+    throw error
+  }
   if (!isCurrent()) {
+    presentationSource.dispose()
     return
   }
   const supported = capabilities.includes(STRUCTURED_AGENT_SESSION_RUNTIME_CAPABILITY)
-  await restoreLocalStructuredSessionTabsOnce(syncGeneration)
+  try {
+    await restoreLocalStructuredSessionTabsOnce(syncGeneration)
+  } catch (error) {
+    initialSource.dispose()
+    throw error
+  }
   if (!isCurrent()) {
+    presentationSource.dispose()
     return
   }
   if (!supported) {
+    presentationSource.dispose()
     return
   }
   let subscriptionGeneration = 0
@@ -80,57 +101,74 @@ export async function startLocalStructuredSessionTabsSync(args: {
       return
     }
     const generation = ++subscriptionGeneration
-    let handle: { unsubscribe: () => void } | null = null
-    handle = await window.api.runtime.subscribe(
-      { method: 'session.tabs.subscribeAll', params: {} },
-      (response) => {
-        if (!isCurrent() || generation !== subscriptionGeneration) {
-          return
-        }
-        if (!response.ok) {
-          // Streaming errors can precede handle resolution; fence that generation and retry.
-          retractDesktopPresentations(LOCAL_STRUCTURED_SESSION_OWNER)
-          subscriptionGeneration += 1
-          handle?.unsubscribe()
-          if (activeHandle === handle) {
-            activeHandle = null
-          }
-          scheduleSubscribeRetry()
-          return
-        }
-        const event = response.result as SessionTabsEvent
-        if (event.type === 'snapshots') {
-          applyStructuredSessionTabSnapshots(event.snapshots, undefined, {
-            ...REPAIR_DROPPED_EPOCHS,
-            authoritative: event.authoritative === true
-          })
-          // Each subscription opens with one census: the host is reachable again.
-          recheckUnconfirmedStructuredAgentLaunches(LOCAL_EXECUTION_HOST_ID)
-        } else if (event.type === 'snapshot' || event.type === 'updated') {
-          applyStructuredSessionTabSnapshots([event], undefined, REPAIR_DROPPED_EPOCHS)
-        } else if (event.type === 'end' && generation === subscriptionGeneration) {
-          // Reattach with one refresh so a runtime-restart boundary cannot strand stale tabs.
-          retractDesktopPresentations(LOCAL_STRUCTURED_SESSION_OWNER)
-          subscriptionGeneration += 1
-          handle?.unsubscribe()
-          if (activeHandle === handle) {
-            activeHandle = null
-          }
-          if (reconnectTimer !== null) {
-            clearTimeout(reconnectTimer)
-          }
-          scheduleSubscribeRetry()
-        }
-      }
+    presentationSource = createDesktopPresentationSource(
+      LOCAL_STRUCTURED_SESSION_OWNER,
+      'subscription',
+      () => isCurrent() && generation === subscriptionGeneration
     )
+    const capturedPresentationSource = presentationSource
+    let handle: { unsubscribe: () => void } | null = null
+    try {
+      handle = await window.api.runtime.subscribe(
+        { method: 'session.tabs.subscribeAll', params: {} },
+        (response) => {
+          if (!isCurrent() || generation !== subscriptionGeneration) {
+            return
+          }
+          if (!response.ok) {
+            // Streaming errors can precede handle resolution; fence that generation and retry.
+            capturedPresentationSource.dispose()
+            subscriptionGeneration += 1
+            handle?.unsubscribe()
+            if (activeHandle === handle) {
+              activeHandle = null
+            }
+            scheduleSubscribeRetry()
+            return
+          }
+          const event = response.result as SessionTabsEvent
+          if (event.type === 'snapshots') {
+            capturedPresentationSource.retain(event.snapshots.map((snapshot) => snapshot.worktree))
+            applyStructuredSessionTabSnapshots(event.snapshots, undefined, {
+              ...REPAIR_DROPPED_EPOCHS,
+              presentationSource: capturedPresentationSource,
+              authoritative: event.authoritative === true
+            })
+            // Each subscription opens with one census: the host is reachable again.
+            recheckUnconfirmedStructuredAgentLaunches(LOCAL_EXECUTION_HOST_ID)
+          } else if (event.type === 'snapshot' || event.type === 'updated') {
+            applyStructuredSessionTabSnapshots([event], undefined, {
+              ...REPAIR_DROPPED_EPOCHS,
+              presentationSource: capturedPresentationSource
+            })
+          } else if (event.type === 'end' && generation === subscriptionGeneration) {
+            // Reattach with one refresh so a runtime-restart boundary cannot strand stale tabs.
+            capturedPresentationSource.dispose()
+            subscriptionGeneration += 1
+            handle?.unsubscribe()
+            if (activeHandle === handle) {
+              activeHandle = null
+            }
+            if (reconnectTimer !== null) {
+              clearTimeout(reconnectTimer)
+            }
+            scheduleSubscribeRetry()
+          }
+        }
+      )
+    } catch (error) {
+      capturedPresentationSource.dispose()
+      throw error
+    }
     if (!isCurrent() || generation !== subscriptionGeneration) {
+      capturedPresentationSource.dispose()
       handle.unsubscribe()
     } else {
       activeHandle = handle
     }
   }
   args.setUnsubscribe(() => {
-    retractDesktopPresentations(LOCAL_STRUCTURED_SESSION_OWNER)
+    presentationSource.dispose()
     if (reconnectTimer !== null) {
       clearTimeout(reconnectTimer)
       reconnectTimer = null
@@ -139,7 +177,6 @@ export async function startLocalStructuredSessionTabsSync(args: {
     activeHandle = null
   })
   void subscribeCurrent().catch((error) => {
-    retractDesktopPresentations(LOCAL_STRUCTURED_SESSION_OWNER)
     console.warn('[structured-session-tabs] subscribe failed', error)
     scheduleSubscribeRetry()
   })

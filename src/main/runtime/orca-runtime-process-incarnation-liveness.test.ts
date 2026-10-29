@@ -1,7 +1,4 @@
-import {
-  trackRunningAgentLaunchPane,
-  resetAgentLaunchPanesForTests
-} from '../agent-launch/agent-launch-pane-attachment'
+import { publishPtyEndpointLoss } from './terminal/pty-endpoint-loss-signal'
 import type { PtyProcessInspection } from '../providers/pty-process-inspection'
 import { hostTestState } from '../native-chat/agent-session-wire/structured-agent-session-host-test-harness'
 import {
@@ -168,7 +165,7 @@ describe('structured worker incarnation liveness', () => {
 })
 
 describe('accepted terminal presentation', () => {
-  it('uses the paid result once, masks only the actual pending launch and preserves rows', async () => {
+  it('uses each paid verdict once without launch masking and preserves rows', async () => {
     const runtime = new OrcaRuntimeService()
     let result: PtyProcessInspection = shellInspection
     let finish!: (value: PtyProcessInspection) => void
@@ -199,29 +196,28 @@ describe('accepted terminal presentation', () => {
     })
     const pty = runtime['ptysById'].get('presentation-pty')!
     const row = pty.lastAgentStatus
-    const launch = trackRunningAgentLaunchPane({
-      worktreeId: '/repo',
-      paneKey: 'tab:11111111-1111-4111-8111-111111111111'
-    })
-    launch.bind('presentation-pty', 'inc-1', pty)
-    launch.agentBound()
     const first = runtime.inspectPtyForegroundProcess('presentation-pty')
     expect(runtime.inspectPtyForegroundProcess('presentation-pty')).toBe(first)
     runtime.terminalRunFacts.recordInput('presentation-pty', 'launch', 'codex\r')
     finish(result)
-    expect((await first).presentation).toMatchObject({ support: 'supported', state: undefined })
+    expect((await first).presentation).toMatchObject({
+      support: 'supported',
+      state: 'not-in-front'
+    })
     expect(inspectProcess).toHaveBeenCalledTimes(1)
     result = { ...result, foregroundProcess: 'codex', foregroundPresentation: 'agent-in-front' }
     const started = runtime.inspectPtyForegroundProcess('presentation-pty')
     finish(result)
     expect((await started).presentation?.state).toBe('agent-in-front')
-    // Prompt/RPC completion is still delayed: detected execution already ended the exception.
     result = { ...result, foregroundProcess: 'zsh', foregroundPresentation: 'not-in-front' }
     const quit = runtime.inspectPtyForegroundProcess('presentation-pty')
     finish(result)
     expect((await quit).presentation?.state).toBe('not-in-front')
-    launch.finish({ kind: 'proceed' })
     const fact = pty.presentation
+    pty.launchAgent = 'codex'
+    await runtime['ptyForegroundAgent'].refresh('presentation-pty')
+    expect(getForegroundProcess).toHaveBeenCalledTimes(1)
+    expect(pty.foregroundAgent).toBeNull()
     runtime.terminalRunFacts.recordInput('presentation-pty', 'driving', 'fg\r')
     expect(pty.presentation).toBe(fact)
     const duplicate = runtime.inspectPtyForegroundProcess('presentation-pty')
@@ -241,8 +237,85 @@ describe('accepted terminal presentation', () => {
     })
     finish(result)
     expect((await stale).presentation).toBeUndefined()
-    resetAgentLaunchPanesForTests()
   })
+  it.each(['inspect', 'read', 'confirm'] as const)(
+    'fences pending %s across same-record forget and keeps the runtime clock',
+    async (path) => {
+      const runtime = new OrcaRuntimeService()
+      const finishes: ((state: 'not-in-front' | 'agent-in-front') => void)[] = []
+      const inspectProcess = vi.fn(
+        () =>
+          new Promise<PtyProcessInspection>((resolve) => {
+            finishes.push((state) => resolve({ ...shellInspection, foregroundPresentation: state }))
+          })
+      )
+      const scalar = vi.fn(
+        (_id: string, accept?: (value: 'not-in-front' | 'agent-in-front') => void) =>
+          new Promise<string>((resolve) =>
+            finishes.push((state) => {
+              accept?.(state)
+              resolve(state === 'agent-in-front' ? 'codex' : 'zsh')
+            })
+          )
+      )
+      runtime.setPtyController({
+        write: () => true,
+        kill: () => true,
+        inspectProcess,
+        getForegroundProcess: scalar,
+        confirmForegroundProcess: scalar
+      })
+      const id = `clock-${path}`
+      runtime.registerPty(id, '/repo', null, {
+        tabId: 'tab',
+        leafId: '11111111-1111-4111-8111-111111111111',
+        incarnationId: 'same-I'
+      })
+      const owner = runtime['ptyForegroundAgent']
+      const record = runtime['ptysById'].get(id)!
+      const read = () =>
+        path === 'inspect'
+          ? owner.inspect(id)
+          : path === 'read'
+            ? owner.read(id)!
+            : owner.confirmPresentation(id)
+      const initial = read()
+      finishes.shift()!('not-in-front')
+      await initial
+      const first = record.presentation!
+      const stale = read()
+      const finishStale = finishes.shift()!
+      owner.forget(id)
+      const next = read()
+      expect(path === 'inspect' ? inspectProcess : scalar).toHaveBeenCalledTimes(3)
+      finishes.shift()!('agent-in-front')
+      await next
+      expect(record.presentation?.state).toBe('agent-in-front')
+      expect(record.presentation!.version).toBeGreaterThan(first.version)
+      const current = record.presentation
+      finishStale('not-in-front')
+      await stale
+      expect(record.presentation).toBe(current)
+      const lost = read()
+      const finishLost = finishes.shift()!
+      publishPtyEndpointLoss(id)
+      expect(record.presentation).toBeUndefined()
+      finishLost('not-in-front')
+      await lost
+      expect(record.presentation).toBeUndefined()
+      runtime.registerPty(id, '/repo', null, {
+        tabId: 'tab',
+        leafId: '11111111-1111-4111-8111-111111111111',
+        incarnationId: 'same-I'
+      })
+      const recreated = read()
+      finishes.shift()!('not-in-front')
+      await recreated
+      expect(runtime['ptysById'].get(id)?.presentation?.version).toBeGreaterThan(current!.version)
+      owner.forget(id)
+    }
+  )
+
   it('distinguishes successful legacy, modern unknown and errors without new reads on failure settlement', async () => {
     const runtime = new OrcaRuntimeService()
     const inspectProcess = vi.fn(async (): Promise<PtyProcessInspection> => ({
@@ -276,31 +349,13 @@ describe('accepted terminal presentation', () => {
     await expect(runtime.inspectPtyForegroundProcess('legacy-pty')).rejects.toThrow(
       'transport lost'
     )
-    const launch = trackRunningAgentLaunchPane({
-      worktreeId: '/repo',
-      paneKey: 'pending:11111111-1111-4111-8111-111111111111'
-    })
-    launch.bind('legacy-pty', 'inc', runtime['ptysById'].get('legacy-pty')!)
     inspectProcess.mockResolvedValue(shellInspection)
-    expect(
-      (await runtime.inspectPtyForegroundProcess('legacy-pty')).presentation?.state
-    ).toBeUndefined()
-    const before = inspectProcess.mock.calls.length
-    launch.finish({ kind: 'unconfirmed' })
-    expect(runtime['ptysById'].get('legacy-pty')?.presentation?.state).toBe('not-in-front')
-    expect(inspectProcess).toHaveBeenCalledTimes(before)
-    const forgotten = trackRunningAgentLaunchPane({
-      worktreeId: '/repo',
-      paneKey: 'pending:11111111-1111-4111-8111-111111111111'
-    })
-    forgotten.bind('legacy-pty', 'inc', runtime['ptysById'].get('legacy-pty')!)
-    await runtime.inspectPtyForegroundProcess('legacy-pty')
+    expect((await runtime.inspectPtyForegroundProcess('legacy-pty')).presentation?.state).toBe(
+      'not-in-front'
+    )
     const pty = runtime['ptysById'].get('legacy-pty')!
     runtime['setPtyConnected'](pty, false)
-    forgotten.finish({ kind: 'unconfirmed' })
     expect(pty.presentation).toBeUndefined()
-    expect(inspectProcess).toHaveBeenCalledTimes(before + 1)
-    resetAgentLaunchPanesForTests()
   })
 })
 
@@ -343,29 +398,6 @@ describe('paid host fact publication work', () => {
             ptyId: `cost-${i}`,
             isActive: i === 0
           }
-        })
-        const owners = Array.from({ length: n }, (_, i) => {
-          const launch = trackRunningAgentLaunchPane({
-            worktreeId: 'other',
-            paneKey: `pending-${i}:${leafId}`
-          })
-          launch.bind(`pending-${i}`, 'inc')
-          return launch
-        })
-        let launchVisits = 0
-        const iterate = Map.prototype[Symbol.iterator]
-        const iteration = vi.spyOn(Map.prototype, Symbol.iterator).mockImplementation(function* (
-          this: Map<unknown, unknown>
-        ) {
-          // SAFETY: instrumentation observes the existing launch map by its exact known pane key.
-          const isLaunchMap = this.has(JSON.stringify(['other', `pending-0:${leafId}`]))
-          for (const entry of iterate.call(this)) {
-            if (isLaunchMap) {
-              launchVisits++
-            }
-            yield entry
-          }
-          return undefined
         })
         // SAFETY: this is the existing internal terminal snapshot shape; all rows are registered above.
         runtime['mobileSessionTabsByWorktree'].set('cost-wt', {
@@ -425,9 +457,6 @@ describe('paid host fact publication work', () => {
         await runtime.inspectPtyForegroundProcess(`cost-${n - 1}`)
         await runtime.inspectPtyForegroundProcess(`cost-${n - 1}`)
         expect(predicates - prior).toBe(n)
-        expect(launchVisits).toBe(0)
-        iteration.mockRestore()
-        owners.forEach((owner) => owner.finish({ kind: 'withdrawn' }))
         stops.forEach((stop) => stop())
         console.info(
           'PRESENTATION_HOST_COST',

@@ -332,7 +332,7 @@ describe('OrcaRuntimeService', () => {
     })
 
     await expect(runtime.inspectTerminalProcess(handle)).rejects.toBe(failure)
-    expect(inspectProcess).toHaveBeenCalledExactlyOnceWith('pty-1')
+    expect(inspectProcess).toHaveBeenCalledExactlyOnceWith('pty-1', { includePresentation: true })
     expect(providerInspectProcess).toHaveBeenCalledExactlyOnceWith('pty-1')
     expect(getForegroundProcess).not.toHaveBeenCalled()
   })
@@ -351,7 +351,7 @@ describe('OrcaRuntimeService', () => {
     })
 
     await expect(runtime.inspectTerminalProcess(handle)).resolves.toEqual(inspection)
-    expect(inspectProcess).toHaveBeenCalledExactlyOnceWith('pty-1')
+    expect(inspectProcess).toHaveBeenCalledExactlyOnceWith('pty-1', { includePresentation: true })
     expect(getForegroundProcess).not.toHaveBeenCalled()
   })
 

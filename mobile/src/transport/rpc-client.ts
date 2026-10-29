@@ -1,7 +1,12 @@
 import type { BrowserScreencastFrame } from './browser-screencast-protocol'
 import { DirectRpcClient } from './direct-rpc-client'
 import type { RpcEnvelopeFields } from './rpc-envelope-fields'
-import type { ConnectionLogSink, ConnectionState, ForegroundNudgeReason } from './types'
+import type {
+  ConnectionLogSink,
+  ConnectionState,
+  ForegroundNudgeReason,
+  RpcResponse
+} from './types'
 import type { UnvalidatedRpcRequestPort } from './unvalidated-rpc-request-port'
 
 export type { SendRequestOptions } from './unvalidated-rpc-request-port'
@@ -12,7 +17,7 @@ type SubscribeOptions = {
   envelope?: RpcEnvelopeFields
 }
 
-type StreamingListener = (result: unknown) => void
+type StreamingListener = (result: unknown, metadata?: RpcResponse['_meta']) => void
 
 // Holding a client also exposes the raw port, so the boundary inventory must cover client holders.
 export type RpcClient = UnvalidatedRpcRequestPort & {

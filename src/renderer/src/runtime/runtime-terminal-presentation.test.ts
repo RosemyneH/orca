@@ -1,9 +1,28 @@
+import {
+  PRESENTATION_LEAF_ID as LEAF_ID,
+  shellPresentation,
+  presentationFrame,
+  observedRuntimeCatalog,
+  createRuntimeTerminalInspectionFixtures
+} from './runtime-terminal-inspection-test-fixtures'
+import {
+  publicRuntimeEnvironment,
+  connectedRuntimeStatus
+} from './paired-runtime-environment-test-fixture'
+import {
+  retireDesktopTerminalObservation,
+  captureDesktopTerminalObservation,
+  desktopContactForTerminal,
+  desktopObservationContact,
+  captureDesktopObservationRead,
+  releaseDesktopObservationSource,
+  desktopObservationCurrent
+} from './desktop-terminal-observation-owner'
 // @vitest-environment happy-dom
 import { LOCAL_STRUCTURED_SESSION_OWNER } from './local-structured-session-owner'
 import { createGlobalSettingsFixture } from '../../../shared/global-settings-test-fixture'
 import type { TerminalInputKind } from '../../../shared/terminal-input-kind'
 import { setLocalRuntimeCapabilitiesForTests } from './local-runtime-capabilities'
-import { createRuntimeTerminalInspectionFixtures } from './runtime-terminal-inspection-test-fixtures'
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { useState } from 'react'
 import { sendRuntimePtyInputVerified } from './runtime-terminal-verified-input'
@@ -13,15 +32,13 @@ import { createPtyInputWriteQueue } from '../components/terminal-pane/pty-input-
 import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../shared/layout-owner-switch'
 import {
   acceptDesktopPresentationFrame,
+  createDesktopPresentationSource,
   retractDesktopPresentations,
   subscribeDesktopPresentation,
   desktopPresentationSnapshot,
   desktopPresentationForExit
 } from './terminal-foreground-presentation'
 import { makeUnifiedTab, makeTab } from '../store/slices/store-session-test-harness'
-import type { RuntimeMobileSessionTabsResult } from '../../../shared/runtime-types'
-import type { TerminalPresentationObservation } from '../../../shared/terminal-foreground-presentation'
-import { makeHostSnapshot } from './host-session-mirror-frame-fixtures'
 import {
   confirmRuntimeTerminalForegroundProcess,
   inspectRuntimeTerminalProcess,
@@ -29,29 +46,6 @@ import {
 } from './runtime-terminal-inspection'
 import type { RuntimeEnvironmentCallRequest } from './runtime-compatibility-test-fixture'
 import { useAppStore } from '../store'
-
-const LEAF_ID = '11111111-1111-4111-8111-111111111111'
-const shellPresentation = {
-  support: 'supported' as const,
-  incarnationId: 'inc',
-  version: 1,
-  state: 'not-in-front' as const
-}
-
-function presentationFrame(
-  worktree: string,
-  id: string,
-  incarnationId: string,
-  presentation?: TerminalPresentationObservation
-): RuntimeMobileSessionTabsResult {
-  const frame = makeHostSnapshot(worktree, id, id)
-  for (const tab of frame.tabs) {
-    if (tab.type === 'terminal') {
-      Object.assign(tab, { ptyId: id, incarnationId, presentation })
-    }
-  }
-  return frame
-}
 
 describe('runtime terminal presentation routing', () => {
   const {
@@ -63,6 +57,242 @@ describe('runtime terminal presentation routing', () => {
     localInspect
   } = createRuntimeTerminalInspectionFixtures()
   afterEach(cleanup)
+  it.each([10, 100])(
+    'addresses current host children and accepted inputs at %s unrelated hosts',
+    async (n) => {
+      const catalog = observedRuntimeCatalog(n)
+      const { rows, statuses, derivationReads } = catalog
+      const id = (i: number) => `remote:host-${i}@@terminal`
+      catalog.resetCatalogReads()
+      useAppStore.setState({
+        runtimeEnvironments: rows,
+        runtimeStatusByEnvironmentId: statuses,
+        ptyIdsByTabId: Object.fromEntries(rows.map((_, i) => [`tab-${i}`, [id(i)]]))
+      })
+      const contacts = rows.map((_, i) => desktopObservationContact(`host-${i}`)!)
+      const owners = rows.map((_, i) => captureDesktopTerminalObservation(id(i))!)
+      expect(contacts.every((contact) => contact.children.size === 1)).toBe(true)
+      expect(catalog.catalogReads).toBe(2 * n) // One accepted catalog-index build shared by all acquisitions.
+      const disposals = owners.map((owner) => {
+        const dispose = vi.fn()
+        owner.dispose.add(dispose)
+        return dispose
+      })
+      catalog.resetCatalogReads()
+      const childVisits = Array(n).fill(0)
+      contacts.forEach((contact, i) => {
+        const values = contact.children.values.bind(contact.children)
+        vi.spyOn(contact.children, 'values').mockImplementation(function* () {
+          for (const owner of values()) {
+            childVisits[i]++
+            yield owner
+          }
+        })
+      })
+      const memberships = owners.map((owner) => vi.spyOn(owner.sources, 'add'))
+      for (let i = 0; i < n; i++) {
+        const token = {}
+        const read = captureDesktopObservationRead(contacts[i]!, token)
+        expect([...read.values()]).toEqual([owners[i]])
+        for (const owner of read.values()) {
+          releaseDesktopObservationSource(owner, token)
+        }
+      }
+      expect(childVisits).toEqual(Array(n).fill(1))
+      memberships.forEach((add) => expect(add).toHaveBeenCalledTimes(1))
+      expect(catalog.catalogReads).toBe(0)
+      let compared = 0
+      const iterator = statuses[Symbol.iterator].bind(statuses)
+      vi.spyOn(statuses, Symbol.iterator).mockImplementation(function* () {
+        for (const entry of iterator()) {
+          compared++
+          yield entry
+        }
+      })
+      derivationReads.fill(0)
+      useAppStore.getState().setRuntimeEnvironmentStatus('host-0', {
+        ...connectedRuntimeStatus('runtime-host-0', 0),
+        checkedAt: 3
+      })
+      expect(compared).toBe(2 * n) // Reducer Map copy plus the adapter's old-input comparison pass.
+      expect(derivationReads[0]).toBeGreaterThan(0)
+      expect(derivationReads.slice(1)).toEqual(Array(n - 1).fill(0))
+      expect(catalog.catalogReads).toBe(0)
+      expect(desktopObservationContact('host-0')).toBe(contacts[0])
+      expect(owners[0]!.active).toBe(true)
+      // Real default bootstrap captures before its held supplier and never visits another host.
+      const held: ((value: unknown) => void)[] = []
+      runtimeCall.mockImplementation(() => new Promise((resolve) => held.push(resolve)))
+      childVisits.fill(0)
+      const { loadInitialWebSessionTabs } = await import('./web-session-tabs-sync/load-initial')
+      for (let i = 0; i < n; i++) {
+        loadInitialWebSessionTabs({
+          environmentId: `host-${i}`,
+          expectedEnvironmentConnectionGeneration: 0,
+          expectedEnvironmentPairingRevision: undefined,
+          expectedTrackingGeneration: 0,
+          isCurrent: () => true
+        })
+      }
+      expect(childVisits).toEqual(Array(n).fill(1))
+      expect(held).toHaveLength(n)
+      expect(contacts.every((contact) => contact.resources.size === 2)).toBe(true)
+      held.forEach((resolve) => resolve({ ok: true, result: { snapshots: [] } }))
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(contacts.every((contact) => contact.resources.size === 1)).toBe(true)
+      // Grow unrelated owners, then unrelated bindings, independently of the target.
+      const unrelated = Array.from({ length: n }, (_, i) =>
+        captureDesktopTerminalObservation(`remote:host-1@@source-${i}`, {})!
+      )
+      let bindingVisits = 0
+      const otherBindings = Array.from({ length: n }, (_, i) => `remote:host-1@@bound-${i}`)
+      const iterate = otherBindings[Symbol.iterator].bind(otherBindings)
+      vi.spyOn(otherBindings, Symbol.iterator).mockImplementation(function* () {
+        for (const id of iterate()) {
+          bindingVisits++
+          yield id
+        }
+      })
+      useAppStore.setState({
+        ptyIdsByTabId: { ...useAppStore.getState().ptyIdsByTabId, extra: otherBindings }
+      })
+      expect(bindingVisits).toBe(n)
+      childVisits.fill(0)
+      const token = {}
+      const target = captureDesktopObservationRead(contacts[0]!, token)
+      expect(target.size).toBe(1)
+      expect(childVisits).toEqual([1, ...Array(n - 1).fill(0)])
+      expect(bindingVisits).toBe(n) // No warm normalization of unrelated bindings.
+      for (const owner of target.values()) {
+        releaseDesktopObservationSource(owner, token)
+      }
+      const targetBindings = Array.from({ length: n }, (_, i) => `remote:host-0@@bound-${i}`)
+      useAppStore.setState({
+        ptyIdsByTabId: { ...useAppStore.getState().ptyIdsByTabId, target: targetBindings }
+      })
+      const largeToken = {}
+      const largeTarget = captureDesktopObservationRead(contacts[0]!, largeToken)
+      expect(largeTarget.size).toBe(n + 1)
+      expect(contacts[0]!.children.size).toBe(n + 1)
+      for (const owner of largeTarget.values()) {
+        releaseDesktopObservationSource(owner, largeToken)
+      }
+      expect(unrelated.every((owner) => owner.active)).toBe(true)
+      const localOwner = captureDesktopTerminalObservation('local-bound', {})!
+      const local = localOwner.contact
+      const { refreshLocalStructuredSessionTabs } =
+        await import('./local-structured-session-tabs-sync/inventory-refresh')
+      const localRead = refreshLocalStructuredSessionTabs()
+      expect(localOwner.sources.size).toBe(2)
+      held.at(-1)!({ ok: true, result: { snapshots: [] } })
+      await localRead
+      expect(localOwner.sources.size).toBe(1)
+      const { refreshWebRuntimeSessionTabsSnapshot } =
+        await import('./web-runtime-session-snapshot')
+      childVisits.fill(0)
+      const eager = refreshWebRuntimeSessionTabsSnapshot('host-0', 'worktree')
+      expect(childVisits[0]).toBe(n + 1) // Before lazy apply-module/supplier awaits.
+      expect(childVisits.slice(1)).toEqual(Array(n - 1).fill(0))
+      useAppStore.getState().clearRuntimeEnvironmentStatus('host-0')
+      expect(contacts[0]!.children.size).toBe(0)
+      expect(owners[0]!.active).toBe(false)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      held.at(-1)!({ ok: false, error: { code: 'unavailable', message: 'test' } })
+      await eager
+      expect(local.children.get('local-bound')).toBe(localOwner)
+      releaseDesktopObservationSource(localOwner, [...localOwner.sources][0]!)
+      useAppStore.getState().retainRuntimeEnvironmentStatuses([])
+      expect(
+        contacts.every((contact) => contact.children.size === 0 && contact.resources.size === 0)
+      ).toBe(true)
+      expect(
+        owners.every((owner) => !owner.active && !owner.sources.size && !owner.dispose.size)
+      ).toBe(true)
+      disposals.forEach((dispose) => expect(dispose).toHaveBeenCalledTimes(1))
+    }
+  )
+
+  it('retires exact binding/catalog/revision/SSH children without stale cleanup selecting replacements', async () => {
+    const environment = 'accepted-owner'
+    const id = `remote:${environment}@@terminal`
+    useAppStore.setState({
+      runtimeEnvironments: [publicRuntimeEnvironment({ id: environment })],
+      runtimeStatusByEnvironmentId: new Map([[environment, connectedRuntimeStatus('A', 0)]]),
+      ptyIdsByTabId: { old: [id] }
+    })
+    const first = captureDesktopTerminalObservation(id)!
+    const captured = desktopObservationCurrent(first)
+    useAppStore.setState({ ptyIdsByTabId: { replacement: [id] } })
+    expect(first.active).toBe(false)
+    expect(captured()).toBe(false)
+    const replacement = captureDesktopTerminalObservation(id)!
+    first.retire()
+    expect(captureDesktopTerminalObservation(id)).toBe(replacement)
+    const independent = {}
+    captureDesktopTerminalObservation(id, independent)
+    useAppStore.setState({ ptyIdsByTabId: { next: [id] } })
+    expect(replacement.active).toBe(true)
+    releaseDesktopObservationSource(replacement, independent)
+    const source = createDesktopPresentationSource(environment, 'accepted')
+    source.apply(presentationFrame('worktree', 'terminal', 'inc', shellPresentation))
+    const equal = desktopPresentationSnapshot(id)
+    useAppStore.getState().applyRuntimeHostStatusSnapshot({
+      environmentId: environment,
+      pairingRevision: 999,
+      sequence: 1,
+      checkedAt: 2,
+      status: null,
+      verification: 'unavailable',
+      transport: 'disconnected'
+    })
+    expect(desktopPresentationSnapshot(id)).toBe(equal)
+    useAppStore.getState().applyRuntimeHostStatusSnapshot({
+      environmentId: environment,
+      pairingRevision: 1,
+      sequence: 1,
+      checkedAt: 2,
+      status: null,
+      verification: 'unavailable',
+      transport: 'disconnected'
+    })
+    expect(desktopPresentationSnapshot(id)).toBeUndefined()
+    expect(replacement.active).toBe(false)
+    useAppStore.getState().clearRuntimeEnvironmentStatus(environment)
+    useAppStore.getState().setRuntimeEnvironmentStatus(environment, connectedRuntimeStatus('B', 0))
+    const current = createDesktopPresentationSource(environment, 'accepted')
+    current.apply(
+      presentationFrame('worktree', 'terminal', 'inc', {
+        ...shellPresentation,
+        state: 'agent-in-front'
+      })
+    )
+    source.dispose()
+    expect(desktopPresentationSnapshot(id)?.state).toBe('agent-in-front')
+    const contact = desktopObservationContact(environment)!
+    const { replaceRuntimeEnvironmentRevisions } = await import('./runtime-environment-revision')
+    replaceRuntimeEnvironmentRevisions([{ id: environment, createdAt: 1, pairingRevision: 2 }])
+    replaceRuntimeEnvironmentRevisions([{ id: environment, createdAt: 1, pairingRevision: 3 }])
+    expect(contact.active).toBe(false)
+    useAppStore.setState({ runtimeEnvironments: [] })
+    expect(desktopObservationContact(environment)).toBeNull()
+    useAppStore.setState({ runtimeEnvironments: [publicRuntimeEnvironment({ id: environment })] })
+    expect(desktopObservationContact(environment)).not.toBe(contact)
+    const sshId = 'ssh:target@@pty'
+    useAppStore.setState({
+      sshConnectionStates: new Map([
+        ['target', { status: 'connected', providerEpoch: 'one', connectionGeneration: 1 }]
+      ]),
+      sshTargetGenerations: new Map([['target', 1]]),
+      ptyIdsByTabId: { ssh: [sshId] }
+    })
+    const ssh = captureDesktopTerminalObservation(sshId)!
+    expect(ssh?.contact.key).toBe('ssh:target')
+    useAppStore.setState({ sshTargetGenerations: new Map() })
+    expect(ssh.active).toBe(false)
+    expect(ssh.contact.children.size).toBe(0)
+    current.dispose()
+  })
+
   it.each([10, 100])(
     'sends %s separated 16KiB physical queue chunks with no presentation work',
     async (n) => {
@@ -158,7 +388,9 @@ describe('runtime terminal presentation routing', () => {
           }
         }
       }
+      let renders = 0
       function useActualOwner() {
+        renders++
         const [chatLeafId, setChatLeafId] = useState<string | null>(leaf)
         const props = { ...controller, chatLeafId, setChatLeafId }
         return useTerminalPaneChatState(
@@ -169,6 +401,33 @@ describe('runtime terminal presentation routing', () => {
       localWriteAccepted.mockResolvedValue(true)
       const rows = useAppStore.getState().agentStatusByPaneKey
       let hook = flow === 'unmounted' ? null : renderHook(useActualOwner)
+      if (flow === 'mounted') {
+        await act(async () => {
+          useAppStore.setState({
+            runtimeEnvironments: [publicRuntimeEnvironment({ id: 'other-environment' })],
+            runtimeStatusByEnvironmentId: new Map([
+              ['other-environment', connectedRuntimeStatus('other-runtime', 0)]
+            ])
+          })
+        })
+        await act(async () => {})
+        const settled = renders
+        for (const host of [LOCAL_STRUCTURED_SESSION_OWNER, 'other-environment']) {
+          await act(async () => {
+            acceptDesktopPresentationFrame(
+              host,
+              presentationFrame('unrelated', 'other-pty', 'inc', shellPresentation)
+            )
+          })
+          expect(renders).toBe(settled)
+        }
+        await act(async () => {
+          useAppStore
+            .getState()
+            .setRuntimeEnvironmentStatus('other-environment', { status: null, checkedAt: 2 })
+        })
+        expect(renders).toBe(settled)
+      }
       localInspect.mockResolvedValue({
         foregroundProcess: 'zsh',
         hasChildProcesses: true,
@@ -265,6 +524,29 @@ describe('runtime terminal presentation routing', () => {
       )
       expect(await sendRuntimePtyInputVerified(id, 'fg\r', 'driving')).toBe(true)
       expect(localWriteAccepted).toHaveBeenCalledTimes(1)
+      if (ORCA_LAYOUT_OWNER_IS_MAIN && refused) {
+        const beforeWake = runtimeCall.mock.calls.filter(
+          ([request]) => request.method === 'layout.apply'
+        ).length
+        localInspect.mockResolvedValue({
+          foregroundProcess: 'zsh',
+          hasChildProcesses: false,
+          presentation: { ...shellPresentation, version: 5 }
+        })
+        await act(async () => {
+          await inspectRuntimeTerminalProcess(id)
+        })
+        expect(
+          runtimeCall.mock.calls.filter(([request]) => request.method === 'layout.apply')
+        ).toHaveLength(beforeWake + 1)
+        await act(async () => {
+          useAppStore.setState({
+            unifiedTabsByWorktree: { wt: [{ ...tab, viewMode: 'terminal' }] }
+          })
+          answers.forEach((answer) => answer({ ok: true, result: { ok: true, result: {} } }))
+        })
+        expect(hook.result.current.effectiveChatViewMode).toBe(false)
+      }
       if (flow === 'mounted') {
         await act(async () => {
           hook.result.current.handleToggleNativeChat()
@@ -276,6 +558,56 @@ describe('runtime terminal presentation routing', () => {
           })
         }
         expect(hook.result.current.effectiveChatViewMode).toBe(true)
+        for (const state of ['not-in-front', 'agent-in-front'] as const) {
+          let finish = () => {}
+          localInspect.mockImplementationOnce(
+            () =>
+              new Promise((resolve) => {
+                finish = () =>
+                  resolve({
+                    foregroundProcess: 'codex',
+                    hasChildProcesses: true,
+                    presentation: { ...shellPresentation, version: 9, state: 'not-in-front' }
+                  })
+              })
+          )
+          const late = inspectRuntimeTerminalProcess(id)
+          await act(async () => {
+            retireDesktopTerminalObservation(id)
+          })
+          expect(desktopPresentationSnapshot(id)).toBeUndefined()
+          await act(async () => {
+            if (!hook.result.current.effectiveChatViewMode) {
+              hook.result.current.handleToggleNativeChat()
+            }
+            if (ORCA_LAYOUT_OWNER_IS_MAIN) {
+              useAppStore.setState({
+                unifiedTabsByWorktree: { wt: [{ ...tab, viewMode: 'chat' }] }
+              })
+              answers.forEach((answer) => answer({ ok: true, result: { ok: true, result: {} } }))
+            }
+          })
+          expect(hook.result.current.effectiveChatViewMode).toBe(true)
+          const current = { ...shellPresentation, state }
+          await act(async () => {
+            acceptDesktopPresentationFrame(
+              LOCAL_STRUCTURED_SESSION_OWNER,
+              presentationFrame('wt', id, 'inc', current)
+            )
+            finish()
+            await late
+          })
+          expect(desktopPresentationSnapshot(id)).toEqual(current)
+          expect(hook.result.current.effectiveChatViewMode).toBe(state === 'agent-in-front')
+          if (ORCA_LAYOUT_OWNER_IS_MAIN && state === 'not-in-front') {
+            await act(async () => {
+              useAppStore.setState({
+                unifiedTabsByWorktree: { wt: [{ ...tab, viewMode: 'terminal' }] }
+              })
+              answers.forEach((answer) => answer({ ok: true, result: { ok: true, result: {} } }))
+            })
+          }
+        }
       }
       hook.unmount()
       setLocalRuntimeCapabilitiesForTests(null)
@@ -284,6 +616,7 @@ describe('runtime terminal presentation routing', () => {
   )
   it('delivers the same paid confirmation before the main callback and preserves legacy/unknown suppliers', async () => {
     const id = 'confirm-presentation'
+    useAppStore.setState({ ptyIdsByTabId: { confirmation: [id, 'legacy-confirm'] } })
     const observation = shellPresentation
     const confirm = vi.fn(async () => ({ foregroundProcess: 'zsh', presentation: observation }))
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this modern-only supplier is called with includePresentation; the one-argument overload is exercised separately.
@@ -344,69 +677,116 @@ describe('runtime terminal presentation routing', () => {
   })
 
   it.each([10, 100])(
-    'retires %s exact delivery scopes without erasing direct authority',
+    'retires %s actual bound/direct/source resources at contact loss',
     async (n) => {
-      const id = `scopes-${n}`
-      const listener = vi.fn()
-      const stop = subscribeDesktopPresentation(id, listener)
-      const presentation = shellPresentation
-      localInspect.mockResolvedValue({
-        foregroundProcess: 'zsh',
-        hasChildProcesses: true,
-        presentation
+      const environment = `resource-${n}`
+      const id = (i: number) => `remote:${environment}@@terminal-${i}`
+      useAppStore.setState({
+        runtimeEnvironments: [publicRuntimeEnvironment({ id: environment })],
+        runtimeStatusByEnvironmentId: new Map([
+          [environment, connectedRuntimeStatus('runtime-A', 0)]
+        ]),
+        ptyIdsByTabId: { resources: Array.from({ length: n * 2 }, (_, i) => id(i)) }
       })
-      await inspectRuntimeTerminalProcess(id)
-      const frame = (i: number, observed = true) =>
-        presentationFrame(
-          `scope-${i}`,
-          `${id}-${i}`,
-          'replacement',
-          observed ? { ...presentation, incarnationId: 'replacement' } : undefined
+      const frame = (i: number) =>
+        presentationFrame(`scope-${i}`, `terminal-${i}`, 'inc', shellPresentation)
+      const source = createDesktopPresentationSource(environment, 'global')
+      const independent = createDesktopPresentationSource(environment, 'active')
+      const stop = subscribeDesktopPresentation(id(0), vi.fn())
+      runtimeCall.mockResolvedValue({
+        ok: true,
+        result: {
+          process: {
+            foregroundProcess: 'powershell',
+            hasChildProcesses: false,
+            presentation: shellPresentation
+          }
+        }
+      })
+      const contact = desktopContactForTerminal(id(0))
+      const owners = []
+      for (let i = 0; i < n; i++) {
+        source.apply(frame(i))
+        await inspectRuntimeTerminalProcess(id(i))
+        owners.push(captureDesktopTerminalObservation(id(i)))
+        await inspectRuntimeTerminalProcess(`remote:${environment}@@unowned-${i}`)
+      }
+      for (let i = n; i < n * 2; i++) {
+        await inspectRuntimeTerminalProcess(id(i))
+        owners.push(captureDesktopTerminalObservation(id(i)))
+      }
+      expect(contact?.resources.size).toBe(n * 2 + 2)
+      const heldRead = createDesktopPresentationSource(environment, 'held-list', () => true, true)
+      const heldFrames = Array.from({ length: n }, (_, i) => source.capture(frame(i)))
+      for (let i = 0; i < n; i++) {
+        retireDesktopTerminalObservation(id(i))
+      }
+      for (let i = 0; i < n; i++) {
+        independent.apply(
+          presentationFrame(`scope-${i}`, `terminal-${i}`, 'inc', {
+            ...shellPresentation,
+            state: 'agent-in-front'
+          })
         )
-      for (let i = 0; i < n; i++) {
-        acceptDesktopPresentationFrame(LOCAL_STRUCTURED_SESSION_OWNER, frame(i))
+        heldFrames[i]!.apply(frame(i))
+        heldFrames[i]!.dispose()
+        heldRead.apply(frame(i))
+        expect(desktopPresentationSnapshot(id(i))?.state).toBe('agent-in-front')
+        owners[i] = captureDesktopTerminalObservation(id(i))
       }
-      acceptDesktopPresentationFrame(LOCAL_STRUCTURED_SESSION_OWNER, frame(0), 'active')
-      let valueVisits = 0
-      const values = Map.prototype.values
-      const valueSpy = vi.spyOn(Map.prototype, 'values').mockImplementation(function* (
-        this: Map<unknown, unknown>
-      ) {
-        for (const value of values.call(this)) {
-          valueVisits++
-          yield value
-        }
-        return undefined
+      heldRead.dispose()
+      independent.retain(['scope-0'])
+      independent.apply(frame(0))
+      for (let i = 0; i < n; i++) {
+        source.apply(frame(i))
+      }
+      const deletes = vi.spyOn(Map.prototype, 'delete')
+      source.dispose()
+      expect(desktopPresentationSnapshot(id(0))?.state).toBe('agent-in-front')
+      const scopedDeletes = deletes.mock.calls.filter(([key]) =>
+        String(key).startsWith('scope-')
+      ).length
+      expect(scopedDeletes).toBe(n)
+      deletes.mockRestore()
+      const equal = desktopPresentationSnapshot(id(0))
+      useAppStore
+        .getState()
+        .setRuntimeEnvironmentStatus(environment, { ...connectedRuntimeStatus('runtime-A', 0) })
+      expect(desktopPresentationSnapshot(id(0))).toBe(equal)
+      if (n === 10) {
+        useAppStore
+          .getState()
+          .setRuntimeEnvironmentStatus(environment, { status: null, checkedAt: 2 })
+      } else {
+        useAppStore.getState().applyRuntimeHostStatusSnapshot({
+          environmentId: environment,
+          pairingRevision: 1,
+          sequence: 1,
+          checkedAt: 2,
+          status: connectedRuntimeStatus('runtime-A', 0).status,
+          verification: 'unavailable',
+          transport: 'disconnected'
+        })
+      }
+      expect(contact?.resources.size).toBe(0)
+      for (let i = 0; i < n * 2; i++) {
+        expect(owners[i]?.active).toBe(false)
+        expect(owners[i]?.dispose.size).toBe(0)
+        expect(owners[i]?.sources.size).toBe(0)
+        expect(desktopPresentationSnapshot(id(i))).toBeUndefined()
+        expect(desktopPresentationSnapshot(`remote:${environment}@@unowned-${i}`)).toBeUndefined()
+      }
+      useAppStore.setState({
+        runtimeStatusByEnvironmentId: new Map([
+          [environment, connectedRuntimeStatus('runtime-B', 0)]
+        ])
       })
-      const keySpy = vi.spyOn(Map.prototype, 'keys')
-      const memberSpy = vi.spyOn(Set.prototype, 'has')
-      for (let i = 0; i < n; i++) {
-        acceptDesktopPresentationFrame(LOCAL_STRUCTURED_SESSION_OWNER, frame(i, false))
-      }
-      acceptDesktopPresentationFrame(LOCAL_STRUCTURED_SESSION_OWNER, frame(0, false), 'active')
-      subscribeDesktopPresentation(`${id}-0`, vi.fn())()
-      for (let i = 0; i < n; i++) {
-        if (i % 2) {
-          retractDesktopPresentations(LOCAL_STRUCTURED_SESSION_OWNER, `scope-${i}`)
-        } else {
-          acceptDesktopPresentationFrame(LOCAL_STRUCTURED_SESSION_OWNER, { ...frame(i), tabs: [] })
-        }
-      }
-      await inspectRuntimeTerminalProcess(`${id}-0`)
-      expect(desktopPresentationSnapshot(`${id}-0`)).toBeUndefined()
-      retractDesktopPresentations(LOCAL_STRUCTURED_SESSION_OWNER, 'scope-0', 'active')
-      await inspectRuntimeTerminalProcess(`${id}-0`)
-      expect(desktopPresentationSnapshot(`${id}-0`)).toEqual(presentation)
-      expect(valueVisits).toBe(0)
-      expect(keySpy).not.toHaveBeenCalled()
-      expect(memberSpy.mock.calls.filter(([value]) => String(value).startsWith(id))).toHaveLength(
-        n + 1 + n / 2
-      )
-      valueSpy.mockRestore()
-      keySpy.mockRestore()
-      memberSpy.mockRestore()
-      expect(desktopPresentationSnapshot(id)).toEqual(presentation)
-      expect(listener).toHaveBeenCalledTimes(1)
+      const replacement = createDesktopPresentationSource(environment, 'active')
+      replacement.apply(frame(0))
+      independent.dispose()
+      expect(desktopPresentationSnapshot(id(0))).toEqual(shellPresentation)
+      replacement.dispose()
+      useAppStore.setState({ ptyIdsByTabId: {} })
       stop()
     }
   )

@@ -104,7 +104,9 @@ describe('spurious shell readings on Codex-launched panes', () => {
       nextAccountLabel: ACCOUNT_B
     })
 
-    expect(window.api.pty.confirmForegroundProcess).toHaveBeenCalledWith('pty-1')
+    expect(window.api.pty.confirmForegroundProcess).toHaveBeenCalledWith('pty-1', {
+      includePresentation: true
+    })
     expect(useAppStore.getState().codexRestartNoticeByPtyId['pty-1']).toEqual({
       previousAccountLabel: ACCOUNT_A,
       nextAccountLabel: ACCOUNT_B

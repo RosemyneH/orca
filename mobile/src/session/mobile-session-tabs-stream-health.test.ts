@@ -1,9 +1,26 @@
+import {
+  deferred,
+  result,
+  success,
+  failure,
+  makeHarness,
+  settle,
+  type TestResult
+} from './mobile-session-tabs-stream-health-test-fixture'
+import { BridgeConnectionCache } from '../mobile-web-shell/bridge/bridge-client-connection-cache'
+import { createStableLogicalRpcClient } from '../transport/stable-logical-rpc-client'
+import { scopeRpcClientToExecutionHost } from '../transport/execution-host-scoped-rpc-client'
+import {
+  createMobilePresentationSource,
+  retractMobilePresentations
+} from '../terminal/terminal-presentation'
 import { createFakeRpcClient } from '../mobile-web-shell/bridge-host-test-fakes'
 import { terminalInputSend } from '../terminal/mobile-terminal-operations'
 import {
   mobilePresentationEntry,
   mobilePresentationSnapshot,
-  subscribeMobilePresentation
+  subscribeMobilePresentation,
+  readMobilePresentation
 } from '../terminal/terminal-presentation'
 import { describe, expect, it, vi } from 'vitest'
 import type { RpcClient } from '../transport/rpc-client'
@@ -12,105 +29,6 @@ import {
   MobileSessionTabsStreamHealth,
   type SessionTabsApplyOutcome
 } from './mobile-session-tabs-stream-health'
-
-type TestResult = {
-  type?: 'snapshot' | 'updated' | 'error' | 'end'
-  snapshotVersion: number
-  tabs: string[]
-}
-
-type Deferred<T> = {
-  promise: Promise<T>
-  resolve: (value: T) => void
-  reject: (error: Error) => void
-}
-
-function deferred<T>(): Deferred<T> {
-  let resolve!: (value: T) => void
-  let reject!: (error: Error) => void
-  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
-    resolve = resolvePromise
-    reject = rejectPromise
-  })
-  return { promise, resolve, reject }
-}
-
-function result(
-  snapshotVersion: number,
-  type?: TestResult['type'],
-  tabs = [`tab-${snapshotVersion}`]
-): TestResult {
-  return { snapshotVersion, tabs, ...(type ? { type } : {}) }
-}
-
-function success(value: TestResult): RpcResponse {
-  return {
-    id: `list-${value.snapshotVersion}`,
-    ok: true,
-    result: value,
-    _meta: { runtimeId: 'runtime-1' }
-  }
-}
-
-function failure(): RpcResponse {
-  return {
-    id: 'list-failure',
-    ok: false,
-    error: { code: 'unavailable', message: 'try again' },
-    _meta: { runtimeId: 'runtime-1' }
-  }
-}
-
-function makeHarness(options?: {
-  generation?: { current: number }
-  apply?: (value: TestResult) => SessionTabsApplyOutcome<string>
-  getApplicationRevision?: () => number
-}) {
-  const requests: Deferred<RpcResponse>[] = []
-  const sendRequest = vi.fn(() => {
-    const request = deferred<RpcResponse>()
-    requests.push(request)
-    return request.promise
-  })
-  const generation = options?.generation ?? { current: 1 }
-  const client = {
-    sendRequest,
-    getGeneration: () => generation.current
-  } as unknown as RpcClient
-  const apply =
-    options?.apply ??
-    vi.fn((value: TestResult): SessionTabsApplyOutcome<string> => ({
-      accepted: true,
-      effectiveTabs: value.tabs
-    }))
-  const consumeAccepted = vi.fn()
-  let recoveryNeeded = false
-  const controller = new MobileSessionTabsStreamHealth<TestResult, string>({
-    client,
-    scope: 'id:repo::worktree',
-    apply,
-    consumeAccepted,
-    hasRecoveryNeed: () => recoveryNeeded,
-    getApplicationRevision: options?.getApplicationRevision
-  })
-  return {
-    apply,
-    client,
-    consumeAccepted,
-    controller,
-    generation,
-    requests,
-    sendRequest,
-    setRecoveryNeeded(value: boolean) {
-      recoveryNeeded = value
-    }
-  }
-}
-
-async function settle(): Promise<void> {
-  await Promise.resolve()
-  await Promise.resolve()
-}
 
 describe('MobileSessionTabsStreamHealth', () => {
   it('coalesces a cohort and runs one trailing request for a newer requirement', async () => {
@@ -426,6 +344,341 @@ describe('MobileSessionTabsStreamHealth', () => {
 
 describe('terminal presentation through the phone feed and send owners', () => {
   it.each([10, 100])(
+    'hands actual logical replay and %s scoped owners across live/dormant contacts',
+    async (n) => {
+      const first = createFakeRpcClient()
+      const logical = createStableLogicalRpcClient(first, 'relay')
+      const client = scopeRpcClientToExecutionHost(logical, 'runtime:host')
+      const tab = (state: 'agent-in-front' | 'not-in-front', version = 1) => ({
+        terminal: 'term',
+        incarnationId: 'inc',
+        presentation: { support: 'supported', incarnationId: 'inc', version, state }
+      })
+      const listener = vi.fn()
+      // At 10 the cache observer precedes the controller; at 100 beginSubscription reorders it.
+      let stop = n === 10 ? subscribeMobilePresentation(client, 'term', listener) : () => {}
+      const consume = vi.fn()
+      const makeController = () =>
+        new MobileSessionTabsStreamHealth<{ type?: string; tabs: unknown[] }, unknown>({
+          client,
+          scope: 'wt',
+          apply: (result) => ({ accepted: true, effectiveTabs: result.tabs }),
+          consumeAccepted: consume,
+          hasRecoveryNeed: () => false
+        })
+      let controller = makeController()
+      let subscription = controller.beginSubscription()
+      let unstream = client.subscribe('session.tabs.subscribe', {}, subscription.listener)
+      if (n === 100) {
+        stop = subscribeMobilePresentation(client, 'term', listener)
+      }
+      first.streams[0]!.emit(
+        { type: 'updated', tabs: [tab('agent-in-front', 9)] },
+        { runtimeId: 'one' }
+      )
+      controller.setReconciliationActive(true)
+      const oldList = controller.requestReconciliation()
+      const oldDirect = readMobilePresentation(client, 'term', 'inc')
+      const second = createFakeRpcClient()
+      await logical.migrateTo(second, 'lan')
+      second.streams[0]!.emit(
+        { type: 'snapshot', tabs: [tab('agent-in-front')] },
+        { runtimeId: 'two' }
+      )
+      second.requests[0]!.resolve({
+        id: 'list',
+        ok: true,
+        result: { tabs: [tab('agent-in-front')] },
+        _meta: { runtimeId: 'two' }
+      })
+      await settle()
+      second.streams[0]!.emit(
+        { type: 'updated', tabs: [tab('not-in-front', 2)] },
+        { runtimeId: 'two' }
+      )
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
+      const requests = second.requests.length
+      expect(controller.poll()).toBeNull()
+      expect(second.requests).toHaveLength(requests)
+      first.streams[0]!.emit(
+        { type: 'updated', tabs: [tab('agent-in-front', 99)] },
+        { runtimeId: 'one' }
+      )
+      first.requests.forEach((request) =>
+        request.resolve({
+          id: 'stale',
+          ok: true,
+          result: {
+            tabs: [tab('agent-in-front', 99)],
+            process: { presentation: tab('agent-in-front', 99).presentation }
+          },
+          _meta: { runtimeId: 'one' }
+        })
+      )
+      await Promise.all([oldList, oldDirect])
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
+      // Current listener survives degraded child replacement; retired physical work still does not.
+      second.streams[0]!.emit({ type: 'end', tabs: [] })
+      second.streams[0]!.emit({ type: 'updated', tabs: [tab('agent-in-front')] })
+      second.requests
+        .slice(requests)
+        .forEach((request) => request.resolve({ id: 'recovery', ok: true, result: { tabs: [] } }))
+      await settle()
+      second.streams[0]!.emit({ type: 'updated', tabs: [tab('agent-in-front', 2)] })
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('agent-in-front')
+      const independent = createMobilePresentationSource(client, 'independent')
+      independent.apply([tab('agent-in-front', 2)])
+      const scopes = Array.from({ length: n }, (_, i) => {
+        const scope = createMobilePresentationSource(client, `scope-${i}`)
+        scope.apply([{ ...tab('not-in-front'), terminal: `term-${i}` }])
+        return scope
+      })
+      const entries = scopes.map((_, i) => mobilePresentationEntry(client, `term-${i}`))
+      let capturedVisits = 0
+      entries.forEach((entry) => {
+        let active = true
+        Object.defineProperty(entry, 'active', {
+          get: () => {
+            capturedVisits++
+            return active
+          },
+          set: (value: boolean) => {
+            active = value
+          },
+          configurable: true
+        })
+      })
+      const capture = independent.capture()
+      capture.apply([tab('agent-in-front', 2)])
+      expect(capturedVisits).toBe(n) // Production per-client captured-owner admission, not a fake inventory.
+      capturedVisits = 0
+      scopes.forEach((scope, i) => {
+        const stale = scope.capture()
+        scope.dispose()
+        stale.apply([{ ...tab('not-in-front'), terminal: `term-${i}` }])
+        stale.dispose()
+        expect(mobilePresentationSnapshot(client, `term-${i}`)).toBeUndefined()
+        const entry = entries[i]!
+        expect(entry.active).toBe(false)
+        expect('members' in entry && entry.members.size).toBe(0)
+      })
+      capture.dispose()
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('agent-in-front')
+      const third = createFakeRpcClient()
+      await logical.migrateTo(third, 'relay')
+      third.streams[0]!.emit({ type: 'updated', tabs: [tab('not-in-front')] })
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
+      controller.dispose()
+      unstream()
+      stop()
+      independent.dispose()
+      retractMobilePresentations(client)
+      expect(third.stateListeners()).toBe(1) // Only the logical physical-session observer remains.
+      const fourth = createFakeRpcClient()
+      await logical.migrateTo(fourth, 'lan') // No presentation observer is present while dormant.
+      expect(scopeRpcClientToExecutionHost(logical, 'runtime:host')).toBe(client)
+      controller = makeController()
+      subscription = controller.beginSubscription()
+      unstream = client.subscribe('session.tabs.subscribe', {}, subscription.listener)
+      stop = subscribeMobilePresentation(client, 'term', listener)
+      fourth.streams[0]!.emit({ type: 'updated', tabs: [tab('not-in-front')] })
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
+      controller.dispose()
+      unstream()
+      stop()
+      retractMobilePresentations(client)
+      const oldStop = subscribeMobilePresentation(client, 'term', listener)
+      const held = readMobilePresentation(client, 'term', 'inc')
+      oldStop()
+      const newStop = subscribeMobilePresentation(client, 'term', listener)
+      const direct = readMobilePresentation(client, 'term', 'inc')
+      fourth.requests.at(-1)!.resolve({
+        id: 'new',
+        ok: true,
+        result: { process: { presentation: tab('agent-in-front').presentation } }
+      })
+      await direct
+      fourth.requests.at(-2)!.resolve({
+        id: 'old',
+        ok: true,
+        result: { process: { presentation: tab('not-in-front', 99).presentation } }
+      })
+      await held
+      oldStop()
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('agent-in-front')
+      newStop()
+      retractMobilePresentations(client)
+      logical.close()
+      expect(fourth.stateListeners()).toBe(0)
+    }
+  )
+
+  it('re-enters the actual native state cache at the same numeric generation without metadata', () => {
+    const connection = new BridgeConnectionCache()
+    const connected = {
+      state: 'connected' as const,
+      generation: 0,
+      reconnectAttempt: 0,
+      lastConnectedAt: null,
+      lastInboundAt: null
+    }
+    connection.prime(connected)
+    const client = createFakeRpcClient({
+      getState: () => connection.read()!.state,
+      getGeneration: () => connection.read()!.generation ?? 0
+    })
+    client.onStateChange = (listener) => connection.onStateChange(listener)
+    const stop = subscribeMobilePresentation(client, 'term', vi.fn())
+    const controller = new MobileSessionTabsStreamHealth<{ tabs: unknown[] }, unknown>({
+      client,
+      scope: 'wt',
+      apply: (result) => ({ accepted: true, effectiveTabs: result.tabs }),
+      consumeAccepted: vi.fn(),
+      hasRecoveryNeed: () => false
+    })
+    const subscription = controller.beginSubscription()
+    const stream = client.subscribe('session.tabs.subscribe', {}, subscription.listener)
+    const tab = {
+      terminal: 'term',
+      incarnationId: 'inc',
+      presentation: {
+        support: 'supported',
+        incarnationId: 'inc',
+        version: 7,
+        state: 'not-in-front'
+      }
+    }
+    client.streams[0]!.emit({ type: 'updated', tabs: [tab] })
+    expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
+    connection.apply({ ...connected, state: 'disconnected' })
+    expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+    connection.apply(connected)
+    client.streams[0]!.emit({
+      type: 'updated',
+      tabs: [{ ...tab, presentation: { ...tab.presentation, version: 1, state: 'agent-in-front' } }]
+    })
+    expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('agent-in-front')
+    stop()
+    stream()
+    controller.dispose()
+    connection.close()
+    expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+  })
+
+  it('keeps reentrant replacement exact through source disposal and admitted publication', () => {
+    const physical = createFakeRpcClient()
+    const logical = createStableLogicalRpcClient(physical, 'relay')
+    const client = scopeRpcClientToExecutionHost(logical, 'runtime:host')
+    const tab = {
+      terminal: 'term',
+      incarnationId: 'inc',
+      presentation: {
+        support: 'supported',
+        incarnationId: 'inc',
+        version: 1,
+        state: 'not-in-front'
+      }
+    }
+    const first = createMobilePresentationSource(client, 'wt')
+    first.apply([tab])
+    let replacement = first
+    let stop = subscribeMobilePresentation(client, 'term', () => {
+      stop()
+      replacement = createMobilePresentationSource(client, 'wt')
+      replacement.apply([
+        { ...tab, presentation: { ...tab.presentation, state: 'agent-in-front' } }
+      ])
+    })
+    const acquired = createMobilePresentationSource(client, 'wt')
+    expect(replacement.current()).toBe(true)
+    first.dispose()
+    expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('agent-in-front')
+    acquired.dispose()
+    expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+    expect(physical.stateListeners()).toBe(1)
+    const publisher = createMobilePresentationSource(client, 'wt')
+    stop = subscribeMobilePresentation(client, 'term', () => {
+      stop()
+      retractMobilePresentations(client)
+      replacement = createMobilePresentationSource(client, 'wt')
+      replacement.apply([
+        { ...tab, presentation: { ...tab.presentation, state: 'agent-in-front' } }
+      ])
+    })
+    publisher.apply([
+      { ...tab, presentation: { ...tab.presentation, version: 2 } },
+      { ...tab, terminal: 'late' }
+    ])
+    expect(mobilePresentationSnapshot(client, 'late')).toBeUndefined()
+    expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('agent-in-front')
+    publisher.dispose()
+    expect(replacement.current()).toBe(true)
+    replacement.dispose()
+    logical.close()
+    expect(physical.stateListeners()).toBe(0)
+  })
+
+  it('does not recreate direct authority when runtime-reset notification releases its exact listener', async () => {
+    const physical = createFakeRpcClient()
+    const logical = createStableLogicalRpcClient(physical, 'relay')
+    const client = scopeRpcClientToExecutionHost(logical, 'runtime:host')
+    const independent = createMobilePresentationSource(client, 'other')
+    let stop = subscribeMobilePresentation(client, 'term', vi.fn())
+    const value = { support: 'supported', incarnationId: 'inc', version: 1, state: 'not-in-front' }
+    const read = readMobilePresentation(client, 'term', 'inc')
+    physical.requests.at(-1)!.resolve({
+      id: 'first',
+      ok: true,
+      result: { process: { presentation: value } },
+      _meta: { runtimeId: 'one' }
+    })
+    await read
+    expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
+    const previousStop = stop
+    stop = subscribeMobilePresentation(client, 'term', () => stop())
+    previousStop()
+    const replacement = readMobilePresentation(client, 'term', 'inc')
+    physical.requests.at(-1)!.resolve({
+      id: 'new',
+      ok: true,
+      result: { process: { presentation: { ...value, state: 'agent-in-front' } } },
+      _meta: { runtimeId: 'two' }
+    })
+    await replacement
+    expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+    expect(independent.current()).toBe(true)
+    independent.dispose()
+    logical.close()
+    expect(physical.stateListeners()).toBe(0)
+  })
+
+  it('cannot certify or reacquire a cancelled logical event during scalar application', () => {
+    const physical = createFakeRpcClient()
+    const logical = createStableLogicalRpcClient(physical, 'relay')
+    const client = scopeRpcClientToExecutionHost(logical, 'runtime:host')
+    const consume = vi.fn()
+    const controller = new MobileSessionTabsStreamHealth<{ tabs: unknown[] }, unknown>({
+      client,
+      scope: 'wt',
+      apply: () => {
+        subscription.cancel()
+        return { accepted: true, effectiveTabs: [] }
+      },
+      consumeAccepted: consume,
+      hasRecoveryNeed: () => false
+    })
+    const subscription = controller.beginSubscription()
+    const stop = client.subscribe('session.tabs.subscribe', {}, subscription.listener)
+    physical.streams[0]!.emit({ type: 'updated', tabs: [] })
+    expect(consume).not.toHaveBeenCalled()
+    expect(controller.isCertified()).toBe(false)
+    controller.dispose()
+    stop()
+    logical.close()
+    expect(physical.stateListeners()).toBe(0)
+  })
+
+  it.each([10, 100])(
     'delivers %s writes without reads or presentation notifications',
     async (n) => {
       const sendRequest = vi.fn(
@@ -435,16 +688,19 @@ describe('terminal presentation through the phone feed and send owners', () => {
           result: { send: { accepted: true } }
         })
       )
-      const client: RpcClient = { ...createFakeRpcClient({ getGeneration: () => 1 }), sendRequest }
+      let generation = 1
+      const physical = createFakeRpcClient({ getGeneration: () => generation })
+      const client: RpcClient = { ...physical, sendRequest }
       const listeners = [vi.fn(), vi.fn()]
       const stops = listeners.map((listener) =>
         subscribeMobilePresentation(client, 'term', listener)
       )
+      const consumeAccepted = vi.fn()
       const controller = new MobileSessionTabsStreamHealth<{ tabs: unknown[] }, unknown>({
         client,
         scope: 'wt',
         apply: (value) => ({ accepted: true, effectiveTabs: value.tabs }),
-        consumeAccepted: vi.fn(),
+        consumeAccepted,
         hasRecoveryNeed: () => false
       })
       const feed = controller.beginSubscription()
@@ -458,7 +714,7 @@ describe('terminal presentation through the phone feed and send owners', () => {
           state: 'not-in-front'
         }
       }
-      feed.listener({ type: 'updated', tabs: [tab] })
+      feed.listener({ type: 'updated', tabs: [tab] }, { runtimeId: 'runtime-1' })
       expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
       listeners.forEach((listener) => listener.mockClear())
       for (let i = 0; i < n; i++) {
@@ -481,10 +737,16 @@ describe('terminal presentation through the phone feed and send owners', () => {
         })
         other.beginSubscription().listener({ type: 'updated', tabs: [tab] })
         other.dispose()
+        expect(physical.stateListeners()).toBe(2)
         expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
       }
       feed.listener({ type: 'updated', tabs: [tab] })
       listeners.forEach((listener) => expect(listener).not.toHaveBeenCalled())
+      feed.listener({ type: 'updated', tabs: [] })
+      expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+      listeners.forEach((listener) => expect(listener).toHaveBeenCalledTimes(1))
+      feed.listener({ type: 'updated', tabs: [tab] })
+      listeners.forEach((listener) => listener.mockClear())
       feed.listener({ type: 'updated', tabs: [{ terminal: 'term', incarnationId: 'replacement' }] })
       expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
       expect(mobilePresentationEntry(client, 'term').value).toBeUndefined()
@@ -498,8 +760,93 @@ describe('terminal presentation through the phone feed and send owners', () => {
       feed.listener({ type: 'end' })
       expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
       expect(listeners[0]).toHaveBeenCalledTimes(3)
+      const currentFeed = controller.beginSubscription()
+      currentFeed.listener({ type: 'updated', tabs: [tab] })
+      controller.setReconciliationActive(true)
+      const list = deferred<RpcResponse>()
+      sendRequest.mockImplementationOnce(() => list.promise)
+      const oldList = controller.requestReconciliation()
+      sendRequest.mockImplementationOnce(async () => ({
+        id: 'direct-reset',
+        ok: true,
+        result: { process: {} }
+      }))
+      await readMobilePresentation(client, 'term', 'inc')
+      expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+      const acceptedBeforeList = consumeAccepted.mock.calls.length
+      list.resolve({ id: 'old-list', ok: true, result: { tabs: [tab] } })
+      await oldList
+      expect(consumeAccepted).toHaveBeenCalledTimes(acceptedBeforeList + 1)
+      expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+      controller.setReconciliationActive(false)
+      for (const state of ['agent-in-front', 'not-in-front'] as const) {
+        const old = deferred<RpcResponse>()
+        sendRequest.mockImplementationOnce(() => old.promise)
+        const pending = readMobilePresentation(client, 'term', 'inc')
+        currentFeed.listener({ type: 'updated', tabs: [{ ...tab, presentation: undefined }] })
+        expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+        const runtimeId = `runtime-${state}`
+        sendRequest.mockImplementationOnce(async () => ({
+          id: 'current',
+          ok: true,
+          _meta: { runtimeId },
+          result: { process: { presentation: { ...tab.presentation, state } } }
+        }))
+        await readMobilePresentation(client, 'term', 'inc')
+        old.resolve({
+          id: 'retired',
+          ok: true,
+          _meta: { runtimeId: 'runtime-1' },
+          result: { process: { presentation: { ...tab.presentation, version: 99 } } }
+        })
+        await pending
+        expect(mobilePresentationSnapshot(client, 'term')?.state).toBe(state)
+        currentFeed.listener({ type: 'updated', tabs: [tab] }, { runtimeId: 'runtime-1' })
+        expect(mobilePresentationSnapshot(client, 'term')?.state).toBe(state)
+        sendRequest.mockImplementationOnce(async () => ({
+          id: 'no-fact',
+          ok: true,
+          result: { process: {} }
+        }))
+        await readMobilePresentation(client, 'term', 'inc')
+        expect(mobilePresentationSnapshot(client, 'term')).toBeUndefined()
+      }
+      const retired = deferred<RpcResponse>()
+      sendRequest.mockImplementationOnce(() => retired.promise)
+      const stale = readMobilePresentation(client, 'term', 'inc')
+      physical.pushState('reconnecting')
+      generation++
+      physical.pushState('connected')
+      currentFeed.listener({ type: 'updated', tabs: [tab] })
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
+      sendRequest.mockImplementationOnce(async () => ({
+        id: 'replacement',
+        ok: true,
+        _meta: { runtimeId: 'runtime-new' },
+        result: { process: { presentation: tab.presentation } }
+      }))
+      await readMobilePresentation(client, 'term', 'inc')
+      retired.resolve({
+        id: 'old-generation',
+        ok: true,
+        result: {
+          process: { presentation: { ...tab.presentation, version: 100, state: 'agent-in-front' } }
+        }
+      })
+      await stale
+      expect(mobilePresentationSnapshot(client, 'term')?.state).toBe('not-in-front')
+      if (n === 100) {
+        stops.forEach((stop) => stop())
+      }
       controller.dispose()
-      stops.forEach((stop) => stop())
+      if (n === 10) {
+        stops.forEach((stop) => stop())
+      }
+      expect(physical.stateListeners()).toBe(0)
+      for (let i = 0; i < n; i++) {
+        await readMobilePresentation(client, `unowned-${i}`)
+      }
+      expect(physical.stateListeners()).toBe(0)
     }
   )
 })

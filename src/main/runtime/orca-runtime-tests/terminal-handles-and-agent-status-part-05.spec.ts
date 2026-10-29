@@ -353,7 +353,7 @@ describe('OrcaRuntimeService', () => {
     runtime.onPtyData('pty-typed-omp', '\x1b]0;Pi ready\x07', 123)
     await new Promise<void>((resolve) => setImmediate(resolve))
 
-    expect(getForegroundProcess).toHaveBeenCalledWith('pty-typed-omp')
+    expect(getForegroundProcess).toHaveBeenCalledWith('pty-typed-omp', expect.any(Function))
     expect(events).toHaveLength(0)
 
     foregroundProcess.resolve('omp')
@@ -583,7 +583,7 @@ describe('OrcaRuntimeService', () => {
 
     const result = await runtime.listMobileSessionTabs(`id:${TEST_WORKTREE_ID}`)
 
-    expect(getForegroundProcess).toHaveBeenCalledWith('pty-typed-pi')
+    expect(getForegroundProcess).toHaveBeenCalledWith('pty-typed-pi', expect.any(Function))
     expect(result.tabs[0]).toEqual(
       expect.objectContaining({
         type: 'terminal',

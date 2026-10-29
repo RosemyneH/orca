@@ -1,3 +1,4 @@
+import { createDesktopPresentationSource } from './terminal-foreground-presentation'
 import type { RuntimeRpcResponse } from '../../../shared/runtime-rpc-envelope'
 import type { RuntimeMobileSessionTabsResult } from '../../../shared/runtime-types'
 import { getRuntimeEnvironmentConnectionGeneration } from '@/store/slices/runtime-status'
@@ -62,133 +63,149 @@ export async function refreshWebRuntimeSessionTabsSnapshot(
     errorMode?: 'warn' | 'throw'
   } = {}
 ): Promise<void> {
-  // Await up front; list application and its receipt must not yield between them.
-  const [
-    { applyWebSessionTabsSnapshot },
-    { applyWebSessionTabsStorePatch },
-    { decideWebSessionTabsSnapshot },
-    trackingLifecycle
-  ] = await loadSessionTabsApplyModules()
-  const expectedEnvironmentPairingRevision =
-    options.expectedEnvironmentPairingRevision ?? getRuntimeEnvironmentRevision(environmentId)
-  const expectedEnvironmentConnectionGeneration =
-    getRuntimeEnvironmentConnectionGeneration(environmentId)
-  const expectedTrackingGeneration =
-    trackingLifecycle.getWebSessionTabsTrackingGeneration(environmentId)
-  const callEnvironment = captureRuntimeEnvironmentCall(
+  const presentationSource = createDesktopPresentationSource(
     environmentId,
-    expectedEnvironmentPairingRevision
+    `list:${worktreeId}`,
+    () => true,
+    true
   )
   try {
-    if (options.acceptCurrentSnapshot) {
-      // Publication can beat structured create; reaccept its version after the exact provisional handoff is known.
-      trackingLifecycle.acceptReplayedWebSessionTabsSnapshot(environmentId, worktreeId)
-    }
-    const listSessionTabs =
-      options.confirmAgentSessionHandoff || options.afterCurrentInFlight
-        ? listRemoteRuntimeSessionTabsAfterCurrentInFlight
-        : listRemoteRuntimeSessionTabsDeduped
-    if (options.afterCurrentInFlight) {
-      throwIfE2eWebRuntimeBrowserReconciliationFails()
-    }
-    const { snapshot, receivedFrame, runtimeId } = await listSessionTabs({
+    // Await up front; list application and its receipt must not yield between them.
+    const [
+      { applyWebSessionTabsSnapshot },
+      { applyWebSessionTabsStorePatch },
+      { decideWebSessionTabsSnapshot },
+      trackingLifecycle
+    ] = await loadSessionTabsApplyModules()
+    const expectedEnvironmentPairingRevision =
+      options.expectedEnvironmentPairingRevision ?? getRuntimeEnvironmentRevision(environmentId)
+    const expectedEnvironmentConnectionGeneration =
+      getRuntimeEnvironmentConnectionGeneration(environmentId)
+    const expectedTrackingGeneration =
+      trackingLifecycle.getWebSessionTabsTrackingGeneration(environmentId)
+    const callEnvironment = captureRuntimeEnvironmentCall(
       environmentId,
-      worktreeId,
-      load: async () => {
-        const response = await callEnvironment({
-          method: 'session.tabs.list',
-          params: {
-            worktree: toRuntimeWorktreeSelector(worktreeId)
-          },
-          timeoutMs: 15_000
-        })
-        return {
-          snapshot: unwrapRuntimeRpcResult(
-            response as RuntimeRpcResponse<RuntimeMobileSessionTabsResult>
-          ),
-          runtimeId: getSessionTabsRuntimeIdFromResponse(response)
-        }
+      expectedEnvironmentPairingRevision
+    )
+    try {
+      if (options.acceptCurrentSnapshot) {
+        // Publication can beat structured create; reaccept its version after the exact provisional handoff is known.
+        trackingLifecycle.acceptReplayedWebSessionTabsSnapshot(environmentId, worktreeId)
       }
-    })
-    if (options.confirmAgentSessionHandoff) {
-      const { confirmWebAgentSessionHandoffAfterCreate } =
-        await import('./web-agent-session-handoff')
-      // Why: this list completed after structured creation, so absence now proves the exact host tab already retired.
-      confirmWebAgentSessionHandoffAfterCreate({
+      const listSessionTabs =
+        options.confirmAgentSessionHandoff || options.afterCurrentInFlight
+          ? listRemoteRuntimeSessionTabsAfterCurrentInFlight
+          : listRemoteRuntimeSessionTabsDeduped
+      if (options.afterCurrentInFlight) {
+        throwIfE2eWebRuntimeBrowserReconciliationFails()
+      }
+      const { snapshot, receivedFrame, runtimeId } = await listSessionTabs({
         environmentId,
         worktreeId,
-        ...options.confirmAgentSessionHandoff
-      })
-    }
-    // Reserve receipt order before ranking; a list answered before close can arrive after retraction.
-    recordReceivedWebSessionTabsSnapshot(
-      environmentId,
-      snapshot,
-      receivedFrame,
-      runtimeId,
-      'bootstrap'
-    )
-    if (getRuntimeEnvironmentRevision(environmentId) !== expectedEnvironmentPairingRevision) {
-      return
-    }
-    const recovered = await recoverMirroredTerminalOrphansBeforeApply(
-      useAppStore.getState(),
-      snapshot,
-      environmentId,
-      {
-        expectedEnvironmentPairingRevision,
-        expectedRuntimeId: runtimeId,
-        getCurrentState: () => useAppStore.getState()
-      }
-    )
-    if (
-      !recovered ||
-      getRuntimeEnvironmentRevision(environmentId) !== expectedEnvironmentPairingRevision
-    ) {
-      return
-    }
-    // Only the frame decision proves this host answer was accepted; discarded workspaces supply no evidence.
-    const decision = shouldApplyRecoveredWebSessionTabsSnapshot(
-      environmentId,
-      recovered,
-      receivedFrame,
-      runtimeId
-    )
-      ? decideWebSessionTabsSnapshot(recovered, environmentId)
-      : WEB_SESSION_TABS_FRAME_OUTRANKED
-    const settleMirror = applyWebSessionTabsStorePatch(
-      (state) => {
-        // Eager refresh can outlive workspace switches; update tabs without taking focus.
-        const patch = decision.apply
-          ? applyWebSessionTabsSnapshot(state, recovered, environmentId)
-          : state
-        return patch === state ? state : patch
-      },
-      {
-        frames: [
-          {
-            environmentId,
-            worktreeId: snapshot.worktree,
-            source: recovered,
-            decision,
-            expectedEnvironmentConnectionGeneration,
-            expectedEnvironmentPairingRevision,
-            expectedTrackingGeneration
+        load: async () => {
+          const response = await callEnvironment({
+            method: 'session.tabs.list',
+            params: {
+              worktree: toRuntimeWorktreeSelector(worktreeId)
+            },
+            timeoutMs: 15_000
+          })
+          return {
+            snapshot: unwrapRuntimeRpcResult(
+              response as RuntimeRpcResponse<RuntimeMobileSessionTabsResult>
+            ),
+            runtimeId: getSessionTabsRuntimeIdFromResponse(response)
           }
-        ]
-      },
-      recovered
-    )
-    settleMirror()
-  } catch (error) {
-    if (options.errorMode === 'throw') {
-      throw error
+        }
+      })
+      const presentationDelivery = presentationSource.capture(snapshot)
+      try {
+        if (options.confirmAgentSessionHandoff) {
+          const { confirmWebAgentSessionHandoffAfterCreate } =
+            await import('./web-agent-session-handoff')
+          // Why: this list completed after structured creation, so absence now proves the exact host tab already retired.
+          confirmWebAgentSessionHandoffAfterCreate({
+            environmentId,
+            worktreeId,
+            ...options.confirmAgentSessionHandoff
+          })
+        }
+        // Reserve receipt order before ranking; a list answered before close can arrive after retraction.
+        recordReceivedWebSessionTabsSnapshot(
+          environmentId,
+          snapshot,
+          receivedFrame,
+          runtimeId,
+          'bootstrap'
+        )
+        if (getRuntimeEnvironmentRevision(environmentId) !== expectedEnvironmentPairingRevision) {
+          return
+        }
+        const recovered = await recoverMirroredTerminalOrphansBeforeApply(
+          useAppStore.getState(),
+          snapshot,
+          environmentId,
+          {
+            expectedEnvironmentPairingRevision,
+            expectedRuntimeId: runtimeId,
+            getCurrentState: () => useAppStore.getState()
+          }
+        )
+        if (
+          !recovered ||
+          getRuntimeEnvironmentRevision(environmentId) !== expectedEnvironmentPairingRevision
+        ) {
+          return
+        }
+        // Only the frame decision proves this host answer was accepted; discarded workspaces supply no evidence.
+        const decision = shouldApplyRecoveredWebSessionTabsSnapshot(
+          environmentId,
+          recovered,
+          receivedFrame,
+          runtimeId
+        )
+          ? decideWebSessionTabsSnapshot(recovered, environmentId)
+          : WEB_SESSION_TABS_FRAME_OUTRANKED
+        const settleMirror = applyWebSessionTabsStorePatch(
+          (state) => {
+            // Eager refresh can outlive workspace switches; update tabs without taking focus.
+            const patch = decision.apply
+              ? applyWebSessionTabsSnapshot(state, recovered, environmentId)
+              : state
+            return patch === state ? state : patch
+          },
+          {
+            frames: [
+              {
+                environmentId,
+                worktreeId: snapshot.worktree,
+                source: recovered,
+                presentationSource: presentationDelivery,
+                decision,
+                expectedEnvironmentConnectionGeneration,
+                expectedEnvironmentPairingRevision,
+                expectedTrackingGeneration
+              }
+            ]
+          },
+          recovered
+        )
+        settleMirror()
+      } finally {
+        presentationDelivery.dispose()
+      }
+    } catch (error) {
+      if (options.errorMode === 'throw') {
+        throw error
+      }
+      // Creation succeeded; the long-lived subscription catches up after eager-refresh failure.
+      console.warn(
+        '[web-runtime-session] failed to refresh session-tabs snapshot:',
+        error instanceof Error ? error.message : String(error)
+      )
     }
-    // Creation succeeded; the long-lived subscription catches up after eager-refresh failure.
-    console.warn(
-      '[web-runtime-session] failed to refresh session-tabs snapshot:',
-      error instanceof Error ? error.message : String(error)
-    )
+  } finally {
+    presentationSource.dispose()
   }
 }
 

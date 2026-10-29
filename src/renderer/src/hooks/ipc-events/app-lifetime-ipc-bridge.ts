@@ -1,3 +1,4 @@
+import { installDesktopTerminalObservationOwners } from '../../runtime/desktop-terminal-observation-owner'
 import { observeJiraImageHostStatus } from '@/runtime/runtime-jira-image-cache'
 import { observeRuntimeHostStatusForPendingRemovals } from '@/store/repos/pending-runtime-repo-removal-replay'
 import type { RuntimeHostStatusSnapshot } from '../../../../shared/runtime-host-status'
@@ -48,7 +49,7 @@ function remountTerminalTabsAwaitingHostHydration(): void {
 }
 
 export function installAppLifetimeIpcEvents(): () => void {
-  const unsubs: (() => void)[] = []
+  const unsubs: (() => void)[] = [installDesktopTerminalObservationOwners()]
   const backgroundWakeDispatcher = createBackgroundSleepingAgentWakeDispatcher()
   unsubs.push(backgroundWakeDispatcher.dispose)
   unsubs.push(

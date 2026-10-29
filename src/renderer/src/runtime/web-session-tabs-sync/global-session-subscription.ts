@@ -1,4 +1,7 @@
-import { retractDesktopPresentations } from '../terminal-foreground-presentation'
+import {
+  createDesktopPresentationSource,
+  retractDesktopPresentations
+} from '../terminal-foreground-presentation'
 import { getRuntimeEnvironmentRevision } from '../runtime-environment-revision'
 import { clearWebSessionCloseIntentsForOwner } from '../web-session-close-intent'
 import { clearWebSessionFocusIntentsForOwner } from '../web-session-focus-intent'
@@ -126,6 +129,11 @@ export function installGlobalSessionTabsSubscriptions({
     environmentIdBySpec.push(environmentId)
     subscriptionSpecs.push({
       subscribe: (isCurrent, { visibilityGeneration, ended }) => {
+        const presentationSource = createDesktopPresentationSource(
+          environmentId,
+          'global',
+          isCurrent
+        )
         const awaitingVisibilityResumeInventory = { value: visibilityGeneration > 0 }
         if (!requestedInitialLoad) {
           requestedInitialLoad = true
@@ -155,7 +163,7 @@ export function installGlobalSessionTabsSubscriptions({
               }
               // Why: an end frame never reaches onClose, and an error response leaves the stream dead.
               if (!response.ok || isSessionTabsStreamEnd(response.result)) {
-                retractDesktopPresentations(environmentId)
+                presentationSource.dispose()
                 ended()
               }
               handleGlobalSessionEvent({
@@ -170,23 +178,35 @@ export function installGlobalSessionTabsSubscriptions({
                   : ({ type: 'end' } satisfies SessionTabsStreamEvent),
                 response,
                 awaitingVisibilityResumeInventory,
-                coordinator
+                coordinator,
+                presentationSource
               })
             },
             onError: (error) => {
               if (isCurrent()) {
-                retractDesktopPresentations(environmentId)
+                presentationSource.dispose()
                 console.warn('[web-session-tabs-sync] global subscription error:', error.message)
               }
             },
             onClose: () => {
               if (isCurrent()) {
-                retractDesktopPresentations(environmentId)
+                presentationSource.dispose()
                 ended()
               }
             }
           }
         )
+          .then((handle) => ({
+            ...handle,
+            unsubscribe: () => {
+              presentationSource.dispose()
+              handle.unsubscribe()
+            }
+          }))
+          .catch((error) => {
+            presentationSource.dispose()
+            throw error
+          })
       },
       onSubscribeError: (error) => {
         console.warn(
@@ -213,8 +233,9 @@ export function installGlobalSessionTabsSubscriptions({
       refs.snapshotApply.current = () => true
       refs.snapshotAccepted.current = () => {}
       dispose()
+      coordinator.dispose()
       for (const { environmentId, expectedEnvironmentPairingRevision } of environments) {
-        retractDesktopPresentations(environmentId)
+        retractDesktopPresentations(environmentId, undefined, 'global')
         const owner = { environmentId, pairingRevision: expectedEnvironmentPairingRevision }
         clearWebSessionCloseIntentsForOwner(owner)
         clearWebSessionFocusIntentsForOwner(owner)

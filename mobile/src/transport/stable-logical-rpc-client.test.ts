@@ -457,16 +457,20 @@ describe('stable logical RPC client subscription fencing', () => {
   // An inert physical disposer leaves only the logical generation guard to reject late events.
   function leakySession() {
     const session = new FakeSession('connected')
-    const listeners = new Set<(result: unknown) => void>()
+    const listeners = new Set<(result: unknown, metadata?: RpcResponse['_meta']) => void>()
     session.subscribe.mockImplementation((_method, _params, listener) => {
       listeners.add(listener)
       return () => {}
     })
     return {
       session,
-      emit(value: unknown): void {
+      emit(value: unknown, metadata?: RpcResponse['_meta']): void {
         for (const listener of listeners) {
-          listener(value)
+          if (metadata) {
+            listener(value, metadata)
+          } else {
+            listener(value)
+          }
         }
       }
     }
@@ -478,9 +482,12 @@ describe('stable logical RPC client subscription fencing', () => {
     const listener = vi.fn()
     client.subscribe('notifications.subscribe', { includeDesktopSuppressed: true }, listener)
 
-    physical.emit({ type: 'ready', subscriptionId: 'sub-1' })
+    physical.emit({ type: 'ready', subscriptionId: 'sub-1' }, { runtimeId: 'runtime-1' })
 
-    expect(listener).toHaveBeenCalledExactlyOnceWith({ type: 'ready', subscriptionId: 'sub-1' })
+    expect(listener).toHaveBeenCalledExactlyOnceWith(
+      { type: 'ready', subscriptionId: 'sub-1' },
+      { runtimeId: 'runtime-1' }
+    )
   })
 
   it('drops a stream event that lands after the caller unsubscribed', () => {

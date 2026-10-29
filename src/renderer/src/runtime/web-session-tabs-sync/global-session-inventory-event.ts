@@ -1,3 +1,4 @@
+import type { DesktopPresentationSource } from '../terminal-foreground-presentation'
 import { toRuntimeExecutionHostId } from '../../../../shared/execution-host'
 import type { RuntimeMobileSessionTabsResult } from '../../../../shared/runtime-types'
 import { recheckUnconfirmedStructuredAgentLaunches } from '../../lib/agent-session/launch/structured-agent-session-launch-unconfirmed-recheck'
@@ -24,6 +25,7 @@ import { isHostMirroredWorktree } from './visibility-types'
 import type { VisibilityResumeCoordinator } from './visibility-resume-coordinator'
 
 export type GlobalSessionInventoryEventArgs = {
+  presentationSource?: DesktopPresentationSource
   environmentId: string
   expectedEnvironmentConnectionGeneration: number
   expectedEnvironmentPairingRevision?: number
@@ -48,7 +50,8 @@ export function handleGlobalSessionInventoryEvent({
   replayed,
   runtimeId,
   awaitingVisibilityResumeInventory,
-  coordinator
+  coordinator,
+  presentationSource
 }: GlobalSessionInventoryEventArgs): void {
   const skipUnchangedResumeWork = awaitingVisibilityResumeInventory.value && !replayed
   awaitingVisibilityResumeInventory.value = false
@@ -82,6 +85,9 @@ export function handleGlobalSessionInventoryEvent({
     event.authoritative === true,
     runtimeId
   )
+  const presentationDeliveries = event.snapshots.map((snapshot) =>
+    presentationSource?.capture(snapshot)
+  )
   let settleHydration: (() => void) | null = null
   void Promise.all(
     event.snapshots.map((snapshot, index) =>
@@ -103,6 +109,7 @@ export function handleGlobalSessionInventoryEvent({
       if (!isCurrent()) {
         return
       }
+      presentationSource?.retain(event.snapshots.map((snapshot) => snapshot.worktree))
       const applicable = recovered.flatMap((snapshot, index) =>
         snapshot !== null &&
         shouldApplyRecoveredWebSessionTabsSnapshot(
@@ -133,10 +140,11 @@ export function handleGlobalSessionInventoryEvent({
       settleHydration = applyWebSessionTabsStorePatch(
         (state) => applyWebSessionTabsSnapshots(state, freshSnapshots, environmentId),
         {
-          frames: applicable.map(({ snapshot }, index) => ({
+          frames: applicable.map(({ snapshot, index: originalIndex }, index) => ({
             environmentId,
             worktreeId: snapshot.worktree,
             source: snapshot,
+            presentationSource: presentationDeliveries[originalIndex],
             decision: decisions[index]!,
             expectedEnvironmentConnectionGeneration,
             expectedEnvironmentPairingRevision,
@@ -172,6 +180,9 @@ export function handleGlobalSessionInventoryEvent({
       }
     })
     .finally(() => {
+      for (const delivery of presentationDeliveries) {
+        delivery?.dispose()
+      }
       if (isCurrent()) {
         settleHydration?.()
       }

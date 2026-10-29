@@ -1,3 +1,5 @@
+import { createDesktopPresentationSource } from '../terminal-foreground-presentation'
+import { LOCAL_STRUCTURED_SESSION_OWNER } from '../local-structured-session-owner'
 import type { RuntimeMobileSessionTabsResult } from '../../../../shared/runtime-types'
 import { refreshLocalRuntimeCapabilities } from '../local-runtime-capabilities'
 import {
@@ -53,6 +55,12 @@ export function refreshLocalStructuredSessionTabs(
   options: { authoritative?: boolean } = {}
 ): Promise<RuntimeMobileSessionTabsResult[]> {
   // Capture request order before IPC: a reply that began before a close cannot retire its fence.
+  const presentationSource = createDesktopPresentationSource(
+    LOCAL_STRUCTURED_SESSION_OWNER,
+    'inventory',
+    () => true,
+    true
+  )
   const authoritativeInventory = beginStructuredAgentSessionAuthoritativeInventory()
   // Explicit authority can start cleanup before IPC; ordinary refreshes wait for host affirmation or failed retries churn RPCs.
   if (options.authoritative) {
@@ -74,14 +82,17 @@ export function refreshLocalStructuredSessionTabs(
         )
       }
       if (isCurrentLocalStructuredSessionGeneration(expectedGeneration)) {
+        presentationSource.retain(snapshots.map((snapshot) => snapshot.worktree))
         applyStructuredSessionTabSnapshots(snapshots, undefined, {
           ...options,
+          presentationSource,
           authoritative: options.authoritative === true || result.authoritative === true,
           authoritativeInventory
         })
       }
       return snapshots
     })
+    .finally(() => presentationSource.dispose())
 }
 
 /** Re-reads one worktree from this machine's host. `reacceptCurrentVersion` is for a window that
@@ -92,14 +103,24 @@ export async function refreshLocalStructuredSessionWorktreeTabs(
 ): Promise<RuntimeMobileSessionTabsResult | null> {
   // Structured chat can be switched off mid-call, which wipes the mirror; a late answer must not re-seed it.
   const expectedGeneration = localStructuredSessionGeneration()
-  const snapshot = await callRuntimeRpc<RuntimeMobileSessionTabsResult>(
-    { kind: 'local' },
-    'session.tabs.list',
-    { worktree: toRuntimeWorktreeSelector(worktreeId) }
+  const presentationSource = createDesktopPresentationSource(
+    LOCAL_STRUCTURED_SESSION_OWNER,
+    `list:${worktreeId}`,
+    () => true,
+    true
   )
-  if (!isCurrentLocalStructuredSessionGeneration(expectedGeneration)) {
-    return null
+  try {
+    const snapshot = await callRuntimeRpc<RuntimeMobileSessionTabsResult>(
+      { kind: 'local' },
+      'session.tabs.list',
+      { worktree: toRuntimeWorktreeSelector(worktreeId) }
+    )
+    if (!isCurrentLocalStructuredSessionGeneration(expectedGeneration)) {
+      return null
+    }
+    applyStructuredSessionTabSnapshots([snapshot], undefined, { ...options, presentationSource })
+    return snapshot
+  } finally {
+    presentationSource.dispose()
   }
-  applyStructuredSessionTabSnapshots([snapshot], undefined, options)
-  return snapshot
 }

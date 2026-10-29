@@ -1,4 +1,4 @@
-import { acceptDesktopPresentationFrame } from '../terminal-foreground-presentation'
+import type { DesktopPresentationSource } from '../terminal-foreground-presentation'
 import type {
   RuntimeMobileSessionTabsRemovedResult,
   RuntimeMobileSessionTabsResult
@@ -48,6 +48,7 @@ function isWorktreeRetraction(
 
 export type StructuredSessionSnapshotApplyOptions = {
   /** Authority census replies answer a just-issued listAll, so exempt them from retired-epoch fencing of delayed dead-generation stream frames. */
+  presentationSource?: DesktopPresentationSource
   authoritative?: boolean
   /** Re-applies a publication at the version already applied: the window removed a chat early. */
   reacceptCurrentVersion?: boolean
@@ -89,7 +90,7 @@ export function applyStructuredSessionTabSnapshots(
   )
   settleStructuredSessionMirror()
   for (const frame of presentationFrames) {
-    acceptDesktopPresentationFrame(owner, frame)
+    options.presentationSource?.apply(frame)
   }
   const { setTabLabel } = useAppStore.getState()
   for (const { tabId, label } of drawnChatLabels) {

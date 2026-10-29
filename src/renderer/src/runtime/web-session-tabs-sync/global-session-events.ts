@@ -1,3 +1,4 @@
+import type { DesktopPresentationSource } from '../terminal-foreground-presentation'
 import type { RuntimeRpcResponse } from '../../../../shared/runtime-rpc-envelope'
 import type { RuntimeMobileSessionTabsResult } from '../../../../shared/runtime-types'
 import { isRuntimeSubscriptionReplayResponse } from '../../../../shared/runtime-subscription-replay'
@@ -26,6 +27,7 @@ import { handleGlobalSessionInventoryEvent } from './global-session-inventory-ev
 import type { VisibilityResumeCoordinator } from './visibility-resume-coordinator'
 
 export type GlobalSessionEventArgs = {
+  presentationSource?: DesktopPresentationSource
   environmentId: string
   expectedEnvironmentConnectionGeneration: number
   expectedEnvironmentPairingRevision?: number
@@ -48,7 +50,8 @@ export function handleGlobalSessionEvent(args: GlobalSessionEventArgs): void {
     isCurrent,
     response,
     awaitingVisibilityResumeInventory,
-    coordinator
+    coordinator,
+    presentationSource
   } = args
   if (!isCurrent()) {
     return
@@ -78,7 +81,8 @@ export function handleGlobalSessionEvent(args: GlobalSessionEventArgs): void {
       replayed,
       runtimeId,
       awaitingVisibilityResumeInventory,
-      coordinator
+      coordinator,
+      presentationSource
     })
     return
   }
@@ -115,6 +119,7 @@ export function handleGlobalSessionEvent(args: GlobalSessionEventArgs): void {
       event.publicationEpoch
     )
   }
+  const presentationDelivery = presentationSource?.capture(event)
   let settleHydration: HostSessionMirrorSettle | null = null
   void recoverMirroredTerminalOrphansBeforeApply(useAppStore.getState(), event, environmentId, {
     expectedEnvironmentPairingRevision,
@@ -148,6 +153,7 @@ export function handleGlobalSessionEvent(args: GlobalSessionEventArgs): void {
                 environmentId,
                 worktreeId: recovered.worktree,
                 source: recovered,
+                presentationSource: presentationDelivery,
                 decision,
                 expectedEnvironmentConnectionGeneration,
                 expectedEnvironmentPairingRevision,
@@ -178,6 +184,7 @@ export function handleGlobalSessionEvent(args: GlobalSessionEventArgs): void {
       }
     })
     .finally(() => {
+      presentationDelivery?.dispose()
       if (isCurrent()) {
         settleHydration?.()
       }

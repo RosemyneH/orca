@@ -59,10 +59,14 @@ describe('RpcClientStreamRegistry', () => {
   it('replays the latest terminal viewport without retaining stale stream routing', () => {
     const { registry, sent } = createRegistry()
     const events: unknown[] = []
+    const suppliers: unknown[] = []
     registry.subscribe(
       'terminal.subscribe',
       { terminal: 'term-1', viewport: { cols: 45, rows: 20 } },
-      (event) => events.push(event)
+      (event, metadata) => {
+        events.push(event)
+        suppliers.push(metadata)
+      }
     )
     const first = sent[0]!
     registry.handleResponse(streamingResponse(first.id, { type: 'subscribed', streamId: 7 }))
@@ -81,6 +85,12 @@ describe('RpcClientStreamRegistry', () => {
       method: 'terminal.subscribe',
       params: { terminal: 'term-1', viewport: { cols: 60, rows: 24 } }
     })
+    expect(suppliers).toEqual([
+      { runtimeId: 'runtime-1' },
+      undefined,
+      { runtimeId: 'runtime-1' },
+      undefined
+    ])
     expect(events).toEqual([
       { type: 'subscribed', streamId: 7 },
       { type: 'data', streamId: 7, chunk: 'before' },

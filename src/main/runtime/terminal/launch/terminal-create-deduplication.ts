@@ -1,5 +1,3 @@
-import type { TerminalCreateOptions } from '../../runtime-terminal-contracts'
-import { paneSize, resolvePtyFirstSize } from '../../../ipc/pty/pty-first-size'
 import { OrcaRuntimeWithCreateAgentSession } from '../../orca-runtime-create-agent-session'
 import type { RuntimeTerminalCreate } from '../../../../shared/runtime-types'
 import { WORKTREE_CREATE_RESULT_TTL_MS } from '../../orca-runtime-core'
@@ -228,28 +226,5 @@ export abstract class OrcaRuntimeWithTerminalCreateDeduplication extends OrcaRun
       setTimeout(drop, WORKTREE_CREATE_RESULT_TTL_MS).unref?.()
     }, drop)
     return created
-  }
-  protected workspaceTerminalFirstSize(
-    worktreeId: string,
-    opts: TerminalCreateOptions,
-    launchOpts: TerminalCreateOptions
-  ) {
-    const session = this.getWorkspaceSessionForWorktree(worktreeId)
-    // The window's latest published active group is where its reveal places the tab.
-    const groupId =
-      launchOpts.targetGroupId ??
-      this.mobileSessionTabsByWorktree.get(worktreeId)?.activeGroupId ??
-      session?.activeGroupIdByWorktree?.[worktreeId]
-    // Unshown workspaces have no measured group; a single group can use the common workspace geometry.
-    const singleGroup =
-      (session?.tabGroups?.[worktreeId]?.length ?? 0) <= 1
-        ? this.singleGroupWorkspaceGridSize
-        : undefined
-    const group = groupId ? this.terminalGroupGridSizes?.[groupId] : undefined
-    return resolvePtyFirstSize({
-      pane: paneSize(session, opts),
-      group,
-      singleGroup
-    })
   }
 }

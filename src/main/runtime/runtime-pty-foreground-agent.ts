@@ -1,3 +1,5 @@
+import { RuntimePtyAgentIdentification } from './runtime-pty-agent-identification'
+import { subscribeToPtyEndpointLoss } from './terminal/pty-endpoint-loss-signal'
 import {
   acceptPtyForegroundPresentation,
   confirmPtyForegroundPresentation,
@@ -10,34 +12,63 @@ import type {
   PtyProcessInspection,
   PtyProcessInspectionOptions
 } from '../providers/pty-process-inspection'
-import { recognizeAgentProcess } from '../../shared/agent-process-recognition'
-import type { TerminalAgent } from '../../shared/terminal-agent'
-import { withTimeoutResult } from './runtime-async-boundaries'
-import { TERMINAL_INTERACTIVE_WAIT_PROBE_TIMEOUT_MS } from './orca-runtime-core'
-import type { RuntimePtyController } from './runtime-pty-controller-contract'
 import type {
   PtyForegroundAgentRefresh,
   PtyForegroundProcessRead,
   PtyForegroundProcessReadEntry
 } from './runtime-terminal-contracts'
 
-const NATIVE_CLAUDE_VERSION_NAME = /^\d+\.\d+\.\d+$/
+type PresentationLease = { current: () => boolean; dispose: () => void }
+type PresentationRead = PtyForegroundProcessReadEntry & { lease: PresentationLease }
 
 export class RuntimePtyForegroundAgent {
   private readonly refreshes = new Map<string, PtyForegroundAgentRefresh>()
-  private readonly reads = new Map<string, PtyForegroundProcessReadEntry>()
+  private readonly reads = new Map<string, PresentationRead>()
   private readonly delayedTitles = new Map<string, number>()
   private readonly inspections = new Map<string, ForegroundInspectionEntry>()
-  private readonly identifies = new Map<string, Promise<TerminalAgent | null>>()
-  // A scan's recognized agent for a version name holds while that name stays in the foreground.
-  private readonly confirmedByPtyId = new Map<
-    string,
-    { foregroundName: string; agent: TerminalAgent }
-  >()
-
-  constructor(private readonly deps: ForegroundPresentationDependencies) {}
+  private readonly identification: RuntimePtyAgentIdentification
+  constructor(private readonly deps: ForegroundPresentationDependencies) {
+    this.identification = new RuntimePtyAgentIdentification(deps, (ptyId, afterTitle) =>
+      this.read(ptyId, afterTitle)
+    )
+  }
 
   private readonly sourceAdmissions: ForegroundSourceAdmissions = new Map()
+  private readonly leases = new Map<string, PresentationLease>()
+  private version = 0
+  private readonly nextVersion = () => ++this.version
+
+  private lease(ptyId: string): PresentationLease {
+    const pty = this.deps.getPty(ptyId)
+    const controller = this.deps.getController()
+    if (!pty) {
+      return { current: () => false, dispose: () => {} }
+    }
+    const incarnation = pty.incarnationId
+    const existing = this.leases.get(ptyId)
+    if (existing?.current()) {
+      return existing
+    }
+    if (existing) {
+      this.forget(ptyId)
+    }
+    const lease: PresentationLease = {
+      current: () =>
+        this.leases.get(ptyId) === lease &&
+        this.deps.getPty(ptyId) === pty &&
+        this.deps.getController() === controller &&
+        pty?.incarnationId === incarnation,
+      dispose: subscribeToPtyEndpointLoss(ptyId, () => {
+        if (!lease.current()) {
+          return
+        }
+        this.forget(ptyId)
+        this.deps.touchSnapshot(ptyId)
+      })
+    }
+    this.leases.set(ptyId, lease)
+    return lease
+  }
 
   inspect(ptyId: string, options?: PtyProcessInspectionOptions): Promise<PtyProcessInspection> {
     const controller = this.deps.getController()
@@ -46,9 +77,11 @@ export class RuntimePtyForegroundAgent {
     }
     const pty = this.deps.getPty(ptyId)
     const incarnation = pty?.incarnationId
+    const lease = this.lease(ptyId)
     const pending = this.inspections.get(ptyId)
     if (
-      pending?.controller === controller &&
+      pending?.lease === lease &&
+      pending.controller === controller &&
       pending.incarnation === incarnation &&
       pending.options?.steadyState === options?.steadyState &&
       pending.options?.expectedIncarnationId === options?.expectedIncarnationId &&
@@ -62,6 +95,7 @@ export class RuntimePtyForegroundAgent {
       .inspectProcess(ptyId, { ...options, includePresentation: true })
       .then((result) => {
         if (
+          !lease.current() ||
           result.verdict === 'unverifiable' ||
           (options?.expectedIncarnationId && options.expectedIncarnationId !== incarnation)
         ) {
@@ -76,11 +110,14 @@ export class RuntimePtyForegroundAgent {
           result.foregroundPresentation,
           result.foregroundPresentationSupported ? 'supported' : 'legacy',
           startedAt,
-          result.foregroundProcessEvidence
+          result.foregroundProcessEvidence,
+          true,
+          lease.current,
+          this.nextVersion
         )
         return { ...result, presentation }
       })
-    const entry = { controller, promise, incarnation, options }
+    const entry = { controller, promise, incarnation, options, lease }
     this.inspections.set(ptyId, entry)
     void promise
       .finally(() => {
@@ -93,7 +130,13 @@ export class RuntimePtyForegroundAgent {
   }
 
   confirmPresentation(ptyId: string) {
-    return confirmPtyForegroundPresentation(this.deps, this.sourceAdmissions, ptyId)
+    return confirmPtyForegroundPresentation(
+      this.deps,
+      this.sourceAdmissions,
+      ptyId,
+      this.lease(ptyId).current,
+      this.nextVersion
+    )
   }
 
   read(ptyId: string, afterTitle = 0): Promise<PtyForegroundProcessRead> | null {
@@ -101,13 +144,23 @@ export class RuntimePtyForegroundAgent {
     if (!controller) {
       return null
     }
+    const lease = this.lease(ptyId)
     const pending = this.reads.get(ptyId)
-    if (pending?.controller === controller && pending.startedAfterTitleObservation >= afterTitle) {
+    if (
+      pending?.lease === lease &&
+      pending.controller === controller &&
+      pending.startedAfterTitleObservation >= afterTitle
+    ) {
       return pending.promise
     }
-    if (pending?.controller === controller) {
+    if (pending?.lease === lease && pending.controller === controller) {
       return pending.promise.then(
-        () => this.read(ptyId, afterTitle) ?? { controller, process: null, available: false }
+        () =>
+          (lease.current() ? this.read(ptyId, afterTitle) : null) ?? {
+            controller,
+            process: null,
+            available: false
+          }
       )
     }
     const unavailable: PtyForegroundProcessRead = { controller, process: null, available: false }
@@ -125,7 +178,8 @@ export class RuntimePtyForegroundAgent {
         })
       )
     } catch {
-      const entry: PtyForegroundProcessReadEntry = {
+      const entry: PresentationRead = {
+        lease,
         controller,
         startedAfterTitleObservation: afterTitle,
         promise: Promise.resolve(unavailable)
@@ -134,7 +188,7 @@ export class RuntimePtyForegroundAgent {
       this.reads.set(ptyId, entry)
       return entry.promise
     }
-    let entry: PtyForegroundProcessReadEntry
+    let entry: PresentationRead
     const promise = processRead
       .then((process) => {
         if (annotated) {
@@ -148,14 +202,16 @@ export class RuntimePtyForegroundAgent {
             foregroundPresentation === null ? 'legacy' : 'supported',
             startedAt,
             undefined,
-            !this.refreshes.has(ptyId)
+            !this.refreshes.has(ptyId),
+            lease.current,
+            this.nextVersion
           )
         }
         return { controller, process, available: true }
       })
       .catch(() => unavailable)
       .finally(() => this.deleteRead(ptyId, entry))
-    entry = { controller, startedAfterTitleObservation: afterTitle, promise }
+    entry = { controller, startedAfterTitleObservation: afterTitle, promise, lease }
     this.reads.set(ptyId, entry)
     return entry.promise
   }
@@ -177,8 +233,12 @@ export class RuntimePtyForegroundAgent {
     entry.promise = (async () => {
       while (true) {
         entry.startedAfterTitleObservation = entry.requestedAfterTitleObservation
-        const changed = await this.load(ptyId, entry.startedAfterTitleObservation)
-        if (changed || entry.requestedAfterTitleObservation <= entry.startedAfterTitleObservation) {
+        const changed = await this.identification.load(ptyId, entry.startedAfterTitleObservation)
+        if (
+          this.refreshes.get(ptyId) !== entry ||
+          changed ||
+          entry.requestedAfterTitleObservation <= entry.startedAfterTitleObservation
+        ) {
           return changed
         }
       }
@@ -191,30 +251,8 @@ export class RuntimePtyForegroundAgent {
     return entry.promise
   }
 
-  /**
-   * Null when launch, foreground, or command evidence owns the pane, or `isCandidate` declines; resolves undefined only on timeout.
-   * Not stored on the pty: a dialog declined before any title would leave no title transition to clear it.
-   */
-  identifyUnowned(
-    ptyId: string,
-    isCandidate: () => boolean
-  ): Promise<TerminalAgent | null | undefined> | null {
-    const pty = this.deps.getPty(ptyId)
-    if (
-      !pty ||
-      (pty.launchAgent ?? pty.foregroundAgent ?? pty.launchCommandAgent) ||
-      !isCandidate()
-    ) {
-      return null
-    }
-    let pending = this.identifies.get(ptyId)
-    if (!pending) {
-      pending = this.identify(ptyId).finally(() => this.identifies.delete(ptyId))
-      this.identifies.set(ptyId, pending)
-    }
-    return withTimeoutResult(pending, TERMINAL_INTERACTIVE_WAIT_PROBE_TIMEOUT_MS).then((result) =>
-      result.ok ? result.value : undefined
-    )
+  identifyUnowned(ptyId: string, isCandidate: () => boolean) {
+    return this.identification.identifyUnowned(ptyId, isCandidate)
   }
 
   getPending(ptyId: string, afterTitle: number): Promise<boolean> | undefined {
@@ -241,80 +279,18 @@ export class RuntimePtyForegroundAgent {
   }
 
   forget(ptyId: string): void {
+    this.leases.get(ptyId)?.dispose()
+    this.leases.delete(ptyId)
+    this.reads.delete(ptyId)
+    this.refreshes.delete(ptyId)
     this.sourceAdmissions.delete(ptyId)
     const pty = this.deps.getPty(ptyId)
     if (pty) {
-      pty.pendingAgentLaunch?.forgetPresentation()
       pty.presentation = undefined
     }
     this.inspections.delete(ptyId)
     this.delayedTitles.delete(ptyId)
-    this.confirmedByPtyId.delete(ptyId)
-  }
-
-  private async load(ptyId: string, afterTitle: number): Promise<boolean> {
-    const controller = this.deps.getController()
-    const pty = this.deps.getPty(ptyId)
-    if (!controller || !pty?.connected || pty.launchAgent) {
-      return false
-    }
-    const presentation = pty.presentation
-    const result = await this.read(ptyId, afterTitle)
-    if (!result || result.controller !== this.deps.getController() || !result.available) {
-      return false
-    }
-    const agent = result.process ? (recognizeAgentProcess(result.process)?.agent ?? null) : null
-    const changed = pty.foregroundAgent !== agent || pty.presentation !== presentation
-    pty.foregroundAgent = agent
-    if (changed) {
-      this.deps.touchSnapshot(ptyId)
-    }
-    return changed
-  }
-
-  private async identify(ptyId: string): Promise<TerminalAgent | null> {
-    const controller = this.deps.getController()
-    const pty = this.deps.getPty(ptyId)
-    if (!controller || !pty?.connected || pty.launchAgent) {
-      return null
-    }
-    const result = await this.read(ptyId)
-    if (!result || result.controller !== this.deps.getController() || !result.available) {
-      return null
-    }
-    const foregroundName = result.process
-    const agent = recognizeAgentProcess(foregroundName)?.agent ?? null
-    // Native Claude's p_comm is its versions/<semver> binary; only a process-table scan reads its argv.
-    if (agent || !foregroundName || !NATIVE_CLAUDE_VERSION_NAME.test(foregroundName)) {
-      this.confirmedByPtyId.delete(ptyId)
-      return agent
-    }
-    const confirmed = this.confirmedByPtyId.get(ptyId)
-    if (confirmed?.foregroundName === foregroundName) {
-      return confirmed.agent
-    }
-    // Windows native Claude is claude.exe (recognized by name), and confirm there forces a full scan.
-    if (process.platform === 'win32') {
-      return null
-    }
-    const confirmedAgent =
-      recognizeAgentProcess(await this.confirm(result.controller, ptyId))?.agent ?? null
-    if (result.controller !== this.deps.getController()) {
-      return null
-    }
-    // Only a recognized agent is kept, so a "not an agent" verdict is rescanned on the next dialog.
-    if (confirmedAgent) {
-      this.confirmedByPtyId.set(ptyId, { foregroundName, agent: confirmedAgent })
-    }
-    return confirmedAgent
-  }
-
-  private async confirm(controller: RuntimePtyController, ptyId: string): Promise<string | null> {
-    try {
-      return (await controller.confirmForegroundProcess?.(ptyId)) ?? null
-    } catch {
-      return null
-    }
+    this.identification.forget(ptyId)
   }
 
   private deleteRead(ptyId: string, entry: PtyForegroundProcessReadEntry): void {

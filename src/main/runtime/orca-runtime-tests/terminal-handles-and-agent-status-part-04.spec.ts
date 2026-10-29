@@ -401,8 +401,7 @@ describe('OrcaRuntimeService', () => {
     expect(result.tabs[0]).not.toHaveProperty('launchAgent')
   })
 
-  it('skips the foreground-process probe when the PTY launch agent is already known', async () => {
-    // Known launchAgent ownership makes a foreground relay probe redundant.
+  it('reads the current foreground on existing title activity while preserving launch attribution', async () => {
     const getForegroundProcess = vi.fn(async () => 'omp')
     const runtime = new OrcaRuntimeService(store)
     runtime.setPtyController({
@@ -422,7 +421,9 @@ describe('OrcaRuntimeService', () => {
     runtime.onPtyData('pty-omp', '\x1b]0;⠋ OMP\x07working\n', 100)
     runtime.onPtyData('pty-omp', '\x1b]0;OMP ready\x07idle\n', 200)
 
-    expect(getForegroundProcess).not.toHaveBeenCalled()
+    await runtime.refreshPtyForegroundAgentFromController('pty-omp')
+    expect(getForegroundProcess).toHaveBeenCalledTimes(2)
+    expect(runtime['ptysById'].get('pty-omp')?.foregroundAgent).toBeNull()
   })
 
   it('probes the foreground process only on a status transition for unknown launch agents', async () => {
@@ -472,7 +473,7 @@ describe('OrcaRuntimeService', () => {
 
     const result = await runtime.listMobileSessionTabs(`id:${TEST_WORKTREE_ID}`)
 
-    expect(getForegroundProcess).toHaveBeenCalledWith('pty-typed-omp')
+    expect(getForegroundProcess).toHaveBeenCalledWith('pty-typed-omp', expect.any(Function))
     expect(result.tabs[0]).toEqual(
       expect.objectContaining({
         type: 'terminal',

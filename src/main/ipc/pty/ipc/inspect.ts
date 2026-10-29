@@ -152,9 +152,12 @@ export function installPtyInspectIpcHandlers(deps: {
         ...(args.steadyState === true ? { steadyState: true } : {})
       }
       if (deps.runtime) {
-        return deps.runtime.inspectPtyForegroundProcess(
+        const runtime = deps.runtime
+        return inspectPtyProviderProcessForRenderer(
+          getProviderForPty(args.id),
           args.id,
-          Object.keys(options).length > 0 ? options : undefined
+          Object.keys(options).length > 0 ? options : undefined,
+          (_provider, id, inspectOptions) => runtime.inspectPtyForegroundProcess(id, inspectOptions)
         )
       }
       return Object.keys(options).length > 0

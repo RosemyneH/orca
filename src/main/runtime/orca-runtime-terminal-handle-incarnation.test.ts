@@ -81,8 +81,19 @@ describe('runtime terminal handle incarnation fencing', () => {
     )
     await expect(
       runtime.inspectTerminalProcess(handle, { expectedIncarnationId: 'incarnation-1' })
-    ).resolves.toEqual({ foregroundProcess: 'codex' })
-    expect(inspectProcess).toHaveBeenCalledWith(PTY_ID, { expectedIncarnationId: 'incarnation-1' })
+    ).resolves.toEqual({
+      foregroundProcess: 'codex',
+      presentation: {
+        incarnationId: 'incarnation-1',
+        state: undefined,
+        support: 'legacy',
+        version: 1
+      }
+    })
+    expect(inspectProcess).toHaveBeenCalledWith(PTY_ID, {
+      expectedIncarnationId: 'incarnation-1',
+      includePresentation: true
+    })
   })
 
   it('preserves a direct handle while the PTY incarnation is unchanged', async () => {

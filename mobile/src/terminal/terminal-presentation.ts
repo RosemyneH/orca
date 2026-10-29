@@ -1,246 +1,258 @@
-import { admitRemoteForegroundEvidence } from '../../../src/shared/remote-foreground-evidence-admission'
-import type { RemoteForegroundEvidence } from '../../../src/shared/foreground-process-evidence'
-import { z } from 'zod'
-import { defineRpcOperation, runRpcOperation } from '../transport/rpc-operation'
-import { rpcResultVariant } from '../transport/rpc-operation-result-reader'
+import { isTerminalPresentationObservation } from '../../../src/shared/terminal-foreground-presentation'
+import type { RpcResponse } from '../transport/types'
 import {
-  isTerminalPresentationObservation,
-  type TerminalPresentationObservation
-} from '../../../src/shared/terminal-foreground-presentation'
-import type { UnvalidatedRpcRequestPort } from '../transport/unvalidated-rpc-request-port'
-
-type Entry = {
-  value?: TerminalPresentationObservation
-  sources: Set<string>
-  listeners: Set<() => void>
-  pending?: Promise<void>
-  evidence?: RemoteForegroundEvidence
-  generations?: Set<string>
+  clients,
+  cacheFor,
+  notify,
+  retire,
+  releaseOwner,
+  releaseCache,
+  current,
+  supplier,
+  ownerFor,
+  accept,
+  reset,
+  type Client,
+  type Owner,
+  type MobilePresentationSource
+} from './mobile-presentation-cache'
+export type {
+  MobilePresentationDelivery,
+  MobilePresentationSource
+} from './mobile-presentation-cache'
+export { readMobilePresentation } from './mobile-presentation-read'
+export function mobilePresentationEntry(client: Client, terminal: string) {
+  return clients.get(client)?.owners.get(terminal) ?? { value: undefined }
 }
-const clients = new WeakMap<UnvalidatedRpcRequestPort, Map<string, Entry>>()
-const feedMembers = new WeakMap<UnvalidatedRpcRequestPort, Map<string, Set<string>>>()
-const inspectPresentation = defineRpcOperation({
-  name: 'terminal.inspect-presentation',
-  method: 'terminal.inspectProcess',
-  acceptance: 'object-result-or-null',
-  barrier: 'on-settle',
-  read: rpcResultVariant(
-    'presentation',
-    z.object({
-      process: z.object({
-        foregroundProcessEvidence: z.unknown().optional(),
-        presentation: z
-          .custom<TerminalPresentationObservation>(isTerminalPresentationObservation)
-          .optional()
-      })
-    })
-  )
-})
-export function mobilePresentationEntry(
-  client: UnvalidatedRpcRequestPort,
-  terminal: string
-): Entry {
-  let entries = clients.get(client)
-  if (!entries) {
-    entries = new Map()
-    clients.set(client, entries)
-  }
-  let entry = entries.get(terminal)
-  if (!entry) {
-    entry = { listeners: new Set(), sources: new Set() }
-    entries.set(terminal, entry)
-  }
-  return entry
-}
-function notify(entry: Entry): void {
-  for (const listener of entry.listeners) {
-    listener()
-  }
-}
-function accept(
-  entry: Entry,
-  value: TerminalPresentationObservation | undefined,
-  source = ''
-): void {
-  if (!value) {
-    return
-  }
-  if (entry.value?.incarnationId === value.incarnationId) {
-    if (value.version < entry.value.version) {
-      return
-    }
-    if (value.version === entry.value.version) {
-      const visible = entry.sources.size > 0
-      entry.sources.add(source)
-      if (!visible) {
-        notify(entry)
-      }
-      return
-    }
-  } else {
-    entry.evidence = undefined
-    entry.generations = undefined
-    entry.pending = undefined
-  }
-  entry.sources = new Set([source])
-  entry.value = value
-  notify(entry)
-}
-export function mobilePresentationSnapshot(client: UnvalidatedRpcRequestPort, terminal: string) {
-  const entry = mobilePresentationEntry(client, terminal)
-  return entry.sources.size ? entry.value : undefined
+export function mobilePresentationSnapshot(client: Client, terminal: string) {
+  const owner = clients.get(client)?.owners.get(terminal)
+  return owner?.active && owner.sources.size ? owner.value : undefined
 }
 export function subscribeMobilePresentation(
-  client: UnvalidatedRpcRequestPort,
+  client: Client,
   terminal: string,
   listener: () => void
-): () => void {
-  const entry = mobilePresentationEntry(client, terminal)
-  entry.listeners.add(listener)
+) {
+  const cache = cacheFor(client)
+  const slot = cache.listeners.get(terminal) ?? new Set<() => void>()
+  cache.listeners.set(terminal, slot)
+  slot.add(listener)
   return () => {
-    entry.listeners.delete(listener)
-    if (
-      !entry.listeners.size &&
-      ![...(feedMembers.get(client)?.values() ?? [])].some((members) => members.has(terminal))
-    ) {
-      clients.get(client)?.delete(terminal)
+    slot.delete(listener)
+    if (!slot.size && cache.listeners.get(terminal) === slot) {
+      cache.listeners.delete(terminal)
+      const owner = cache.owners.get(terminal)
+      if (owner) {
+        releaseOwner(cache, terminal, owner)
+      }
     }
+    releaseCache(client, cache)
   }
 }
-function retract(client: UnvalidatedRpcRequestPort, terminal: string, scope?: string): void {
-  const entry = clients.get(client)?.get(terminal)
-  if (!entry) {
-    return
-  }
-  const visible = entry.sources.size > 0
-  if (scope === undefined) {
-    entry.sources.clear()
-  } else {
-    entry.sources.delete(scope)
-  }
-  if (!entry.sources.size) {
-    entry.pending = undefined
-    entry.value = undefined
-    entry.evidence = undefined
-    entry.generations = undefined
-    if (!entry.listeners.size) {
-      clients.get(client)?.delete(terminal)
+export function createMobilePresentationSource(
+  client: Client,
+  scope: string
+): MobilePresentationSource {
+  clients.get(client)?.sources.get(scope)?.dispose()
+  const cache = cacheFor(client)
+  const replacement = cache.sources.get(scope)
+  if (replacement) {
+    if (replacement.current()) {
+      return replacement
     }
-    if (visible) {
-      notify(entry)
+    replacement.dispose()
+    return createMobilePresentationSource(client, scope)
+  }
+  const contact = cache.contact
+  let active = true
+  type Member = { owner: Owner; retire: () => void }
+  const members = new Map<string, Member>()
+  const pending = new Set<() => void>()
+  const source: MobilePresentationSource = {
+    current: () => active && cache.sources.get(scope) === source && current(client, cache, contact),
+    own(terminal, owner) {
+      owner.members.add(source)
+      let member = members.get(terminal)
+      if (member?.owner !== owner) {
+        const acquired: Member = {
+          owner,
+          retire: () => {
+            if (members.get(terminal) === acquired) {
+              members.delete(terminal)
+            }
+          }
+        }
+        owner.dispose.add(acquired.retire)
+        member = acquired
+      }
+      members.set(terminal, member)
+    },
+    capture() {
+      const captured = new Map(cache.owners)
+      let live = true
+      const dispose = () => {
+        live = false
+        captured.clear()
+        pending.delete(dispose)
+      }
+      pending.add(dispose)
+      return {
+        dispose,
+        apply: (tabs, metadata) => {
+          if (live) {
+            apply(tabs, metadata, captured)
+          }
+        }
+      }
+    },
+    dispose() {
+      if (!active) {
+        return
+      }
+      active = false
+      const disposers = [...pending]
+      for (const dispose of disposers) {
+        dispose()
+      }
+      if (cache.sources.get(scope) === source) {
+        cache.sources.delete(scope)
+      }
+      for (const [terminal, member] of members) {
+        const owner = member.owner
+        owner.dispose.delete(member.retire)
+        owner.sources.delete(source)
+        owner.members.delete(source)
+        if (owner.active && !owner.sources.size) {
+          owner.value = undefined
+          notify(cache, terminal)
+        }
+        if (owner.active) {
+          releaseOwner(cache, terminal, owner)
+        }
+      }
+      members.clear()
+      releaseCache(client, cache)
+    },
+    apply: (tabs, metadata) => apply(tabs, metadata)
+  }
+  function apply(
+    tabs: readonly unknown[],
+    metadata?: RpcResponse['_meta'],
+    captured?: ReadonlyMap<string, Owner>
+  ) {
+    if (!source.current()) {
+      return
+    }
+    const retired = new Set<string>()
+    for (const [terminal, owner] of captured ?? []) {
+      if (!owner.active) {
+        retired.add(terminal)
+      }
+    }
+    if (!supplier(cache, metadata) || !source.current()) {
+      return
+    }
+    const seen = new Set<string>()
+    for (const tab of tabs) {
+      if (!source.current()) {
+        return
+      }
+      if (
+        !tab ||
+        typeof tab !== 'object' ||
+        !('terminal' in tab) ||
+        typeof tab.terminal !== 'string'
+      ) {
+        continue
+      }
+      const terminal = tab.terminal
+      seen.add(terminal)
+      if (retired.has(terminal)) {
+        continue
+      }
+      const incarnation =
+        'incarnationId' in tab && typeof tab.incarnationId === 'string' ? tab.incarnationId : null
+      const value =
+        'presentation' in tab &&
+        isTerminalPresentationObservation(tab.presentation) &&
+        tab.presentation.incarnationId === incarnation
+          ? tab.presentation
+          : undefined
+      let owner = cache.owners.get(terminal)
+      if (
+        owner &&
+        ((owner.incarnation && owner.incarnation !== incarnation) || (!value && cache.modern))
+      ) {
+        retire(cache, terminal, owner)
+        if (!source.current()) {
+          return
+        }
+        if (cache.owners.has(terminal)) {
+          continue
+        }
+        owner = undefined
+      }
+      owner ??= ownerFor(cache, terminal)
+      owner.incarnation = incarnation
+      source.own(terminal, owner)
+      if (value) {
+        accept(cache, terminal, owner, value, source)
+      } else {
+        owner.sources.delete(source)
+      }
+    }
+    for (const [terminal, member] of members) {
+      if (!source.current()) {
+        return
+      } else if (!seen.has(terminal) && !retired.has(terminal)) {
+        const owner = member.owner
+        members.delete(terminal)
+        owner.dispose.delete(member.retire)
+        const visible = owner.value !== undefined && owner.sources.size > 0
+        owner.sources.delete(source)
+        owner.members.delete(source)
+        if (owner.active && !owner.sources.size) {
+          owner.value = undefined
+          if (visible) {
+            notify(cache, terminal)
+          }
+        }
+        if (owner.active) {
+          releaseOwner(cache, terminal, owner)
+        }
+      }
     }
   }
-}
-export function retractMobilePresentations(
-  client: UnvalidatedRpcRequestPort,
-  scope?: string
-): void {
-  const scopes = feedMembers.get(client)
-  const members = scope === undefined ? clients.get(client)?.keys() : scopes?.get(scope)
-  if (scope === undefined) {
-    scopes?.clear()
-  } else {
-    scopes?.delete(scope)
-  }
-  for (const terminal of members ?? []) {
-    retract(client, terminal, scope)
-  }
+  cache.sources.set(scope, source)
+  return source
 }
 export function acceptMobilePresentationFrame(
-  client: UnvalidatedRpcRequestPort,
+  client: Client,
   tabs: readonly unknown[],
-  scope: string
-): void {
-  let scopes = feedMembers.get(client)
-  if (!scopes) {
-    scopes = new Map()
-    feedMembers.set(client, scopes)
-  }
-  const current = new Set<string>()
-  for (const tab of tabs) {
-    if (
-      typeof tab !== 'object' ||
-      !tab ||
-      !('terminal' in tab) ||
-      typeof tab.terminal !== 'string'
-    ) {
-      continue
-    }
-    current.add(tab.terminal)
-    if (
-      clients.get(client)?.get(tab.terminal)?.value?.incarnationId !==
-      ('incarnationId' in tab ? tab.incarnationId : undefined)
-    ) {
-      retract(client, tab.terminal)
-    }
-    if (
-      'presentation' in tab &&
-      isTerminalPresentationObservation(tab.presentation) &&
-      'incarnationId' in tab &&
-      tab.incarnationId === tab.presentation.incarnationId
-    ) {
-      accept(mobilePresentationEntry(client, tab.terminal), tab.presentation, scope)
-    } else {
-      retract(client, tab.terminal, scope)
-    }
-  }
-  const previous = scopes.get(scope)
-  if (current.size) {
-    scopes.set(scope, current)
-  } else {
-    scopes.delete(scope)
-  }
-  for (const terminal of previous ?? []) {
-    if (current.has(terminal)) {
-      continue
-    }
-    retract(client, terminal, scope)
-    if (![...scopes.values()].some((members) => members.has(terminal))) {
-      retract(client, terminal)
-    }
-  }
+  scope: string,
+  metadata?: RpcResponse['_meta']
+) {
+  const source =
+    clients.get(client)?.sources.get(scope) ?? createMobilePresentationSource(client, scope)
+  source.apply(tabs, metadata)
 }
-export function readMobilePresentation(
-  client: UnvalidatedRpcRequestPort,
-  terminal: string,
-  expectedIncarnationId?: string | null
-): Promise<void> {
-  const entry = mobilePresentationEntry(client, terminal)
-  if (entry.pending) {
-    return entry.pending
+export function retractMobilePresentations(client: Client, scope?: string) {
+  const cache = clients.get(client)
+  if (!cache) {
+    return
   }
-  const startedAt = performance.now()
-  const incarnation = expectedIncarnationId ?? entry.value?.incarnationId ?? null
-  const promise = runRpcOperation(client, inspectPresentation, {
-    terminal,
-    ...(incarnation ? { expectedIncarnationId: incarnation } : {})
-  })
-    .then((response) => {
-      if (clients.get(client)?.get(terminal) !== entry || entry.pending !== promise) {
-        return
-      }
-      const evidence = admitRemoteForegroundEvidence(response?.process.foregroundProcessEvidence, {
-        expectedPtyId: terminal,
-        expectedIncarnationId: incarnation,
-        requestStartedAtMonotonic: startedAt,
-        receivedAtMonotonic: performance.now(),
-        lastAuthorityGeneration: entry.evidence?.authorityGeneration ?? null,
-        lastObservationEpoch: entry.evidence?.observationEpoch ?? -1,
-        knownAuthorityGenerations: entry.generations
-      })
-      if (!evidence) {
-        return
-      }
-      entry.evidence = evidence
-      ;(entry.generations ??= new Set()).add(evidence.authorityGeneration)
-      accept(entry, response?.process.presentation)
-    })
-    .catch(() => {})
-    .finally(() => {
-      if (entry.pending === promise) {
-        entry.pending = undefined
-      }
-    })
-  entry.pending = promise
-  return promise
+  if (scope === undefined) {
+    cache.contact = null
+    cache.runtimeId = undefined
+    cache.modern = false
+    cache.retired.clear()
+    const sources = [...cache.sources.values()]
+    reset(cache)
+    for (const source of sources) {
+      source.dispose()
+    }
+  } else {
+    cache.sources.get(scope)?.dispose()
+  }
+  releaseCache(client, cache)
 }

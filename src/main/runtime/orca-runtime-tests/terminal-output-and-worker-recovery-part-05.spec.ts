@@ -152,7 +152,10 @@ describe('OrcaRuntimeService', () => {
     expect(listProcesses).toHaveBeenCalledWith('local', LIST_PROVIDER_DEADLINE)
     expect(getForegroundProcess).not.toHaveBeenCalled()
     await runtime.refreshPtyForegroundAgentFromController('pty-ambiguous')
-    expect(getForegroundProcess).toHaveBeenCalledExactlyOnceWith('pty-ambiguous')
+    expect(getForegroundProcess).toHaveBeenCalledExactlyOnceWith(
+      'pty-ambiguous',
+      expect.any(Function)
+    )
     for (const { name, leafId } of cases.slice(0, 2)) {
       expect(
         getSession().sleepingAgentSessionsByPaneKey?.[`legacy-${name}:${leafId}`]

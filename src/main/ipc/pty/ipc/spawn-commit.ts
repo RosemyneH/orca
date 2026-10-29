@@ -19,14 +19,6 @@ export async function commitPtyIpcSpawn(ctx: PtyIpcSpawnState): Promise<PtySpawn
       args.worktreeId.length <= 512
         ? args.worktreeId
         : null
-    if (
-      ctx.paneAgentLaunch &&
-      ctx.result.incarnationId &&
-      !ctx.result.isReattach &&
-      ctx.result.agentSessionEnsure?.disposition !== 'adopted'
-    ) {
-      ctx.paneAgentLaunch.running.bind(ctx.result.id, ctx.result.incarnationId)
-    }
     const response = ipcSpawnResponse(ctx)
     return commitPtySpawn({
       state: ctx,

@@ -209,7 +209,8 @@ describe('inspectPtyProviderProcess child-process evidence', () => {
     await expect(inspectPtyProviderProcess(provider, 'pty-closing')).resolves.toEqual({
       foregroundProcess: '/bin/zsh',
       hasChildProcesses: true,
-      childProcessEvidence: 'unverifiable'
+      childProcessEvidence: 'unverifiable',
+      foregroundPresentationSupported: true
     })
   })
 
@@ -233,7 +234,8 @@ describe('inspectPtyProviderProcess child-process evidence', () => {
     await expect(inspectPtyProviderProcess(provider, 'pty-swapped')).resolves.toEqual({
       foregroundProcess: null,
       hasChildProcesses: true,
-      childProcessEvidence: 'unverifiable'
+      childProcessEvidence: 'unverifiable',
+      foregroundPresentationSupported: true
     })
   })
 })

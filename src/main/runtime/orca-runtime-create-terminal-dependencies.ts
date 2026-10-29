@@ -71,14 +71,3 @@ export function terminalRevealViewerOptions(
     ...(opts.agentLaunchViewer ? { agentLaunchViewer: opts.agentLaunchViewer() } : {})
   }
 }
-
-export {
-  trackRunningAgentLaunchPane,
-  isAgentLaunchRunningIn,
-  type RunningAgentLaunchPane
-} from '../agent-launch/agent-launch-pane-attachment'
-export {
-  recordTerminalLaunchMetadata,
-  resolveTerminalLaunchResult,
-  terminalLaunchPublicFacts
-} from './terminal/launch/terminal-launch-result'

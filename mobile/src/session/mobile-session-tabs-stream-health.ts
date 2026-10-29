@@ -1,9 +1,10 @@
-import type { RpcFailure } from '../transport/types'
+import { runSessionTabsListRequest } from './mobile-session-tabs-list-request'
+import { startSessionTabsRequestCohort } from './mobile-session-tabs-request-cohort'
+import type { RpcResponse } from '../transport/types'
 import {
-  acceptMobilePresentationFrame,
-  retractMobilePresentations
+  createMobilePresentationSource,
+  type MobilePresentationSource
 } from '../terminal/terminal-presentation'
-import { sessionTabsListRead } from './mobile-session-read-operations'
 
 export type {
   SessionTabsApplyOutcome,
@@ -31,10 +32,24 @@ export class MobileSessionTabsStreamHealth<Result, Tab> {
   private snapshotSeen = false
   private reconciliationActive = false
   private disposed = false
+  private presentationSource: MobilePresentationSource
+  private readonly stopPresentationContact: () => void
 
   constructor(private readonly options: ControllerOptions<Result, Tab>) {
     this.generation = this.readGeneration()
     this.applicationRevision = this.readApplicationRevision()
+    this.presentationSource = createMobilePresentationSource(options.client, options.scope)
+    this.stopPresentationContact = options.client.onStateChange(() => {
+      if (this.disposed) {
+        return
+      }
+      if (options.client.getState() !== 'connected') {
+        this.presentationSource.dispose()
+        this.invalidateStream('probing')
+      } else {
+        this.syncGeneration()
+      }
+    })
   }
 
   requestReconciliation(): Promise<void> {
@@ -97,13 +112,18 @@ export class MobileSessionTabsStreamHealth<Result, Tab> {
   beginSubscription(): StreamSubscription {
     this.syncGeneration()
     const epoch = ++this.subscriptionEpoch
+    this.presentationSource.dispose()
+    this.presentationSource = createMobilePresentationSource(
+      this.options.client,
+      this.options.scope
+    )
     this.invalidateStream('probing')
     return {
-      listener: (payload) => {
+      listener: (payload, metadata) => {
         if (this.disposed || epoch !== this.subscriptionEpoch) {
           return
         }
-        this.handleStreamPayload(payload)
+        this.handleStreamPayload(payload, epoch, metadata)
       },
       cancel: () => {
         if (epoch === this.subscriptionEpoch) {
@@ -120,13 +140,28 @@ export class MobileSessionTabsStreamHealth<Result, Tab> {
   }
 
   dispose(): void {
-    retractMobilePresentations(this.options.client, this.options.scope)
     this.disposed = true
     this.subscriptionEpoch += 1
+    this.stopPresentationContact()
+    this.presentationSource.dispose()
   }
 
-  private handleStreamPayload(payload: unknown): void {
+  private handleStreamPayload(
+    payload: unknown,
+    epoch: number,
+    metadata?: RpcResponse['_meta']
+  ): void {
     this.syncGeneration()
+    const child = this.presentationSource
+    const generation = this.generation
+    const admitted = () =>
+      epoch === this.subscriptionEpoch &&
+      this.isCurrentGeneration(generation) &&
+      this.presentationSource === child &&
+      child.current()
+    if (!admitted()) {
+      return
+    }
     if (!payload || typeof payload !== 'object') {
       return
     }
@@ -134,15 +169,17 @@ export class MobileSessionTabsStreamHealth<Result, Tab> {
     if (event.type === 'snapshot') {
       this.invalidateStream('probing')
       this.snapshotSeen = true
-      this.applyCurrent(event, 'stream')
-      this.startCurrentRequest()
+      const outcome = this.applyCurrent(event, 'stream', child, metadata, admitted)
+      if (outcome.accepted && admitted()) {
+        this.startCurrentRequest()
+      }
       return
     }
     if (event.type === 'updated') {
       const capturedRequirement = this.requirementRevision
       const ownerGeneration = this.generation
-      const outcome = this.applyCurrent(event, 'stream')
-      if (!outcome.accepted || !this.isCurrentGeneration(ownerGeneration)) {
+      const outcome = this.applyCurrent(event, 'stream', child, metadata, admitted)
+      if (!outcome.accepted || !this.isCurrentGeneration(ownerGeneration) || !admitted()) {
         return
       }
       this.health = 'live'
@@ -158,25 +195,35 @@ export class MobileSessionTabsStreamHealth<Result, Tab> {
 
   private applyCurrent(
     result: Result,
-    source: SessionTabsStreamSource
+    source: SessionTabsStreamSource,
+    presentationSource: Pick<MobilePresentationSource, 'apply'>,
+    metadata?: RpcResponse['_meta'],
+    admitted = () => true
   ): SessionTabsApplyOutcome<Tab> {
     const generation = this.generation
     const outcome = this.options.apply(result)
-    if (!outcome.accepted || !this.isCurrentGeneration(generation)) {
+    if (!outcome.accepted || !this.isCurrentGeneration(generation) || !admitted()) {
       return { accepted: false }
     }
     this.applicationRevision =
       outcome.applicationRevision === undefined
         ? this.applicationRevision + 1
         : Math.max(this.applicationRevision, outcome.applicationRevision)
-    acceptMobilePresentationFrame(this.options.client, outcome.effectiveTabs, this.options.scope)
+    presentationSource.apply(outcome.effectiveTabs, metadata)
+    if (!admitted()) {
+      return { accepted: false }
+    }
     this.options.consumeAccepted(result, outcome.effectiveTabs, source)
-    return outcome
+    return admitted() ? outcome : { accepted: false }
   }
 
   private invalidateStream(health: Exclude<StreamHealth, 'live'>): void {
     if (health === 'degraded') {
-      retractMobilePresentations(this.options.client, this.options.scope)
+      this.presentationSource.dispose()
+      this.presentationSource = createMobilePresentationSource(
+        this.options.client,
+        this.options.scope
+      )
     }
     this.barrier += 1
     this.health = health
@@ -189,84 +236,41 @@ export class MobileSessionTabsStreamHealth<Result, Tab> {
       return Promise.resolve()
     }
     const key = `${this.generation}:${this.barrier}`
-    const shared = this.inFlight.get(key)
-    if (shared) {
-      return shared.promise
-    }
-    let resolveRequest!: () => void
-    const promise = new Promise<void>((resolve) => {
-      resolveRequest = resolve
-    })
-    const cohort = { promise, resolve: resolveRequest, retry }
-    this.inFlight.set(key, cohort)
-    this.runCohortRequest(key, cohort)
-    return promise
-  }
-
-  private runCohortRequest(key: string, cohort: RequestCohort): void {
-    const owner: RequestOwner = {
-      generation: this.generation,
-      barrier: this.barrier,
-      requirement: this.requirementRevision,
-      applicationRevision: this.readApplicationRevision()
-    }
-    const finish = (canDrain: boolean): void => {
-      if (
-        canDrain &&
-        this.inFlight.get(key) === cohort &&
+    return startSessionTabsRequestCohort(
+      this.inFlight,
+      key,
+      retry,
+      () =>
+        this.runRequest({
+          generation: this.generation,
+          barrier: this.barrier,
+          requirement: this.requirementRevision,
+          applicationRevision: this.readApplicationRevision()
+        }),
+      () =>
         key === `${this.generation}:${this.barrier}` &&
         this.reconciliationActive &&
         this.requirementRevision > this.satisfiedRevision
-      ) {
-        this.runCohortRequest(key, cohort)
-        return
-      }
-      if (this.inFlight.get(key) === cohort) {
-        this.inFlight.delete(key)
-      }
-      cohort.resolve()
-    }
-    void this.runRequest(owner).then(finish, () => finish(false))
+    )
   }
 
-  private async runRequest(owner: RequestOwner): Promise<boolean> {
+  private runRequest(owner: RequestOwner): Promise<boolean> {
     try {
-      this.options.onFetchStarted?.()
-      const response = await sessionTabsListRead.request(this.options.client, {
-        worktree: this.options.scope
-      })
-      if (!this.isCurrentGeneration(owner.generation)) {
-        return false
-      }
-      if (!response.ok) {
-        if (owner.barrier === this.barrier) {
-          this.options.onFetchFailed?.(response as RpcFailure)
+      return runSessionTabsListRequest(owner, this.options, this.presentationSource.capture(), {
+        isCurrentGeneration: (generation) => this.isCurrentGeneration(generation),
+        barrier: () => this.barrier,
+        readApplicationRevision: () => this.readApplicationRevision(),
+        applyCurrent: (result, source, delivery, metadata) =>
+          this.applyCurrent(result, source, delivery, metadata),
+        accept: (requirement) => {
+          this.satisfiedRevision = Math.max(this.satisfiedRevision, requirement)
+          if (this.snapshotSeen) {
+            this.health = 'live'
+          }
         }
-        return false
-      }
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the snapshot's shape is the owner's type parameter, which no module-level reader can name.
-      const result = sessionTabsListRead.interpret(response) as Result
-      if (owner.barrier !== this.barrier) {
-        return false
-      }
-      if (owner.applicationRevision !== this.readApplicationRevision()) {
-        return false
-      }
-      this.options.onFetchSucceeded?.(result)
-      const outcome = this.applyCurrent(result, 'list')
-      if (!outcome.accepted || !this.isCurrentGeneration(owner.generation)) {
-        return false
-      }
-      this.satisfiedRevision = Math.max(this.satisfiedRevision, owner.requirement)
-      if (this.snapshotSeen) {
-        this.health = 'live'
-      }
-      return true
+      })
     } catch (error) {
-      if (this.isCurrentGeneration(owner.generation) && owner.barrier === this.barrier) {
-        this.options.onFetchErrored?.(error)
-      }
-      return false
+      return Promise.reject(error)
     }
   }
 
@@ -286,10 +290,18 @@ export class MobileSessionTabsStreamHealth<Result, Tab> {
       return
     }
     const generation = this.readGeneration()
-    if (generation === this.generation) {
+    if (this.options.client.getState() !== 'connected') {
+      return
+    }
+    if (generation === this.generation && this.presentationSource.current()) {
       return
     }
     this.generation = generation
+    this.presentationSource.dispose()
+    this.presentationSource = createMobilePresentationSource(
+      this.options.client,
+      this.options.scope
+    )
     this.invalidateStream('probing')
   }
 

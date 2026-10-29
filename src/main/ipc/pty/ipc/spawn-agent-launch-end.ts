@@ -41,13 +41,6 @@ export function endPaneAgentLaunch(ctx: PtyIpcSpawnState, end: PaneAgentLaunchEn
   }
   const closed = launch.running.closedByUser()
   if ('started' in end) {
-    if (
-      ctx.result.incarnationId &&
-      !ctx.result.isReattach &&
-      ctx.result.agentSessionEnsure?.disposition !== 'adopted'
-    ) {
-      launch.running.bind(ctx.result.id, ctx.result.incarnationId)
-    }
     if (closed) {
       stopClosed(launch)
     } else {

@@ -14,7 +14,6 @@ import { decideTerminalForegroundPresentation } from '../../../src/shared/termin
 import {
   mobilePresentationSnapshot,
   subscribeMobilePresentation,
-  retractMobilePresentations,
   readMobilePresentation
 } from '../terminal/terminal-presentation'
 import { encodeNativeChatTranscriptIdentity } from '../../../src/shared/native-chat-transcript-retention'
@@ -103,11 +102,6 @@ export function useMobileNativeChatActiveResolution(args: {
     })
     return () => subscription.remove()
   }, [sampleShown])
-  useLayoutEffect(() => {
-    if (client && args.connState && args.connState !== 'connected') {
-      retractMobilePresentations(client)
-    }
-  }, [client, args.connState])
   const setTabView = setTabViewBase
   const toggleTabChatView = toggleTabChatViewBase
   const tabWantsChat =

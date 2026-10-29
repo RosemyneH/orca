@@ -1,3 +1,11 @@
+import type {
+  RpcStreamingListener,
+  RpcStreamSubscribeOptions,
+  StreamRequest,
+  StreamRegistryOptions
+} from './rpc-client-stream-contract'
+export type { RpcStreamingListener, RpcStreamSubscribeOptions } from './rpc-client-stream-contract'
+
 import {
   decodeBrowserScreencastFrame,
   type BrowserScreencastFrame
@@ -15,33 +23,8 @@ import {
 } from './rpc-subscription-result-shapes'
 import { RpcClientTerminalStreamRouter } from './rpc-client-terminal-stream-router'
 import * as sessionTabsStream from './rpc-client-session-tabs-stream'
-import type { RpcEnvelopeFields, RpcRequestFrame } from './rpc-envelope-fields'
-import type { ConnectionState, RpcResponse, RpcSuccess } from './types'
-
-export type RpcStreamingListener = (result: unknown) => void
-
-export type RpcStreamSubscribeOptions = {
-  onBinaryFrame?: (frame: BrowserScreencastFrame) => void
-  envelope?: RpcEnvelopeFields
-}
-
-type StreamRequest = {
-  method: string
-  params: unknown
-  envelope?: RpcEnvelopeFields
-  listener?: RpcStreamingListener
-  onBinaryFrame?: (frame: BrowserScreencastFrame) => void
-  subscriptionId?: string
-  cancelled?: boolean
-  sent?: boolean
-  receivedSnapshot?: boolean
-}
-
-type StreamRegistryOptions = {
-  nextId: () => string
-  getState: () => ConnectionState
-  sendFrame: (frame: RpcRequestFrame) => boolean
-}
+import type { RpcEnvelopeFields } from './rpc-envelope-fields'
+import type { RpcResponse, RpcSuccess } from './types'
 
 export class RpcClientStreamRegistry {
   private readonly streams = new Map<string, StreamRequest>()
@@ -128,11 +111,15 @@ export class RpcClientStreamRegistry {
     if (response.ok) {
       const result = (response as RpcSuccess).result as Record<string, unknown> | null
       if (stream && isStreamEndResult(result)) {
-        this.finish(response.id, stream, result)
+        this.finish(response.id, stream, result, response._meta)
         return true
       }
       if (stream && result?.type === 'scrollback') {
-        stream.listener?.(result)
+        if (response._meta) {
+          stream.listener?.(result, response._meta)
+        } else {
+          stream.listener?.(result)
+        }
         return true
       }
     }
@@ -173,7 +160,7 @@ export class RpcClientStreamRegistry {
     }
     const result = response.result
     if (isStreamEndResult(result)) {
-      this.finish(response.id, stream, result)
+      this.finish(response.id, stream, result, response._meta)
       return
     }
     if (sessionTabsStream.recordSnapshot(stream, result) && stream.cancelled) {
@@ -204,7 +191,11 @@ export class RpcClientStreamRegistry {
       this.terminalRouter.register(response.id, result.streamId, stream.listener)
     }
     if (!stream.cancelled) {
-      stream.listener?.(result)
+      if (response._meta) {
+        stream.listener?.(result, response._meta)
+      } else {
+        stream.listener?.(result)
+      }
     }
   }
 
@@ -312,9 +303,18 @@ export class RpcClientStreamRegistry {
   }
 
   /** Removed first, so neither the listener's dispose nor a replay can name a host-ended stream. */
-  private finish(id: string, stream: StreamRequest, result: unknown): void {
+  private finish(
+    id: string,
+    stream: StreamRequest,
+    result: unknown,
+    metadata?: RpcResponse['_meta']
+  ): void {
     const listener = stream.cancelled ? undefined : stream.listener
     this.remove(id)
-    listener?.(result)
+    if (metadata) {
+      listener?.(result, metadata)
+    } else {
+      listener?.(result)
+    }
   }
 }

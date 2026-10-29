@@ -228,7 +228,9 @@ describe('connectPanePty confirmed process exit retires the live agent row', () 
     foreground = 'pwsh.exe'
     await vi.advanceTimersByTimeAsync(10_000)
 
-    expect(window.api.pty.confirmForegroundProcess).toHaveBeenCalledWith('pty-live-codex')
+    expect(window.api.pty.confirmForegroundProcess).toHaveBeenCalledWith('pty-live-codex', {
+      includePresentation: true
+    })
     expect(mockStoreState.paneForegroundAgentByPaneKey[paneKey]?.agent).toBe('codex')
     expect(mockStoreState.dropAgentStatus).not.toHaveBeenCalled()
     expect(terminal.write.mock.calls.map(([data]) => data).join('')).not.toContain(

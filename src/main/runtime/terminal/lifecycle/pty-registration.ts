@@ -1,4 +1,3 @@
-import { bindAgentLaunchPresentation } from '../../../agent-launch/agent-launch-pane-attachment'
 import { OrcaRuntimeWithInvalidateAllHandlesForPty } from './pty-handle-invalidation'
 import type { PtyIncarnationId } from '../../../../shared/pty-incarnation'
 import type { TuiAgent } from '../../../../shared/tui-agent'
@@ -112,9 +111,6 @@ export abstract class OrcaRuntimeWithRegisterPty extends OrcaRuntimeWithInvalida
         : {}),
       ...(binding?.incarnationId ? { incarnationId: binding.incarnationId } : {})
     })
-    if (paneKey) {
-      bindAgentLaunchPresentation({ worktreeId, paneKey }, pty)
-    }
     // Bind-first applies to main-owned layouts; paired-server workspaces and storeless test runtimes have no local binding to assert (L80).
     if (
       ORCA_LAYOUT_OWNER_IS_MAIN &&

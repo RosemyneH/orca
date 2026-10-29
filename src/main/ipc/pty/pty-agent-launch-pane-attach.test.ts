@@ -7,9 +7,7 @@ import { registerPtyHandlers } from './register-handlers'
 import { setLocalPtyProvider } from './provider/registry'
 import {
   resetAgentLaunchPanesForTests,
-  trackRunningAgentLaunchPane,
-  bindAgentLaunchPresentation,
-  isAgentLaunchRunningIn
+  trackRunningAgentLaunchPane
 } from '../../agent-launch/agent-launch-pane-attachment'
 import { AGENT_LAUNCH_PANE_REFUSED_CODE } from '../../../shared/agent-launch-pane-verdict'
 
@@ -132,49 +130,6 @@ describe('a pane whose process belongs to an agent launch', () => {
   }
 
   const PANE_ADDRESS = { worktreeId, tabId, leafId }
-
-  it('registers the fresh IPC launch phase before publication without reserving the attached pane', async () => {
-    const providerSpawn = vi.fn(async () => ({
-      id: 'pty-fresh-launch',
-      incarnationId: 'inc-launch'
-    }))
-    const runtime = registerWithRuntime(providerSpawn)
-    const record: Parameters<typeof bindAgentLaunchPresentation>[1] = {
-      ptyId: 'pty-fresh-launch',
-      incarnationId: 'inc-launch',
-      pendingAgentLaunch: undefined
-    }
-    runtime.registerPty.mockImplementation(() => bindAgentLaunchPresentation(pane, record))
-    Object.assign(runtime, {
-      showTerminalWorkspaceLaunchScope: vi.fn(async () => ({
-        id: worktreeId,
-        path: '/tmp/agent-launch-early',
-        connectionId: null
-      })),
-      planAgentPaneLaunch: vi.fn(async () => ({ command: 'claude', launchAgent: 'claude' }))
-    })
-    const result = await handlers.get('pty:spawn')!(null, {
-      cols: 80,
-      rows: 24,
-      cwd: '/tmp/agent-launch-early',
-      worktreeId,
-      tabId,
-      leafId,
-      env: { ORCA_PANE_KEY: paneKey, ORCA_WORKTREE_ID: worktreeId },
-      agentLaunch: {
-        launch: { agent: 'claude', target: { kind: 'existing', worktree: `id:${worktreeId}` } }
-      }
-    })
-    expect(result).toMatchObject({ id: 'pty-fresh-launch', incarnationId: 'inc-launch' })
-    const changed = vi.fn()
-    expect(record.pendingAgentLaunch?.presentation('not-in-front', changed)).toBeUndefined()
-    expect(isAgentLaunchRunningIn(worktreeId, { kind: 'tab', tabId })).toBe(false)
-    expect(record.pendingAgentLaunch?.presentation('agent-in-front', changed)).toBe(
-      'agent-in-front'
-    )
-    expect(record.pendingAgentLaunch).toBeUndefined()
-    expect(providerSpawn).toHaveBeenCalledTimes(1)
-  })
 
   it('waits for the launch instead of spawning while it runs, then tells the window it settled', async () => {
     const providerSpawn = vi.fn(async () => ({ id: 'pty-after-launch' }))

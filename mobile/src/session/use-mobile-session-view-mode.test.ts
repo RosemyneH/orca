@@ -1,8 +1,13 @@
+import { createStableLogicalRpcClient } from '../transport/stable-logical-rpc-client'
+import { scopeRpcClientToExecutionHost } from '../transport/execution-host-scoped-rpc-client'
+import { MobileSessionTabsStreamHealth } from './mobile-session-tabs-stream-health'
 import { createFakeRpcClient } from '../mobile-web-shell/bridge-host-test-fakes'
 import { useMobileNativeChatActiveResolution } from './use-mobile-native-chat-active-resolution'
 import {
   acceptMobilePresentationFrame,
-  retractMobilePresentations
+  createMobilePresentationSource,
+  retractMobilePresentations,
+  readMobilePresentation
 } from '../terminal/terminal-presentation'
 import type { RpcClient } from '../transport/rpc-client'
 import { createElement, useRef } from 'react'
@@ -94,84 +99,322 @@ describe('useMobileSessionViewMode', () => {
     })
   }
 
-  it('applies first-join quit to real preferences, keeps Terminal after fg and retracts stale tab negatives', async () => {
-    vi.mocked(loadDefaultSessionView).mockResolvedValue('chat')
-    const client: RpcClient = {
-      ...createFakeRpcClient(),
-      sendRequest: vi.fn<RpcClient['sendRequest']>(async () => ({
-        id: 'inspect',
-        ok: true,
-        result: { process: {} }
-      }))
-    }
-    const negative = {
-      support: 'supported' as const,
-      incarnationId: 'inc',
-      version: 1,
-      state: 'not-in-front' as const
-    }
-    const tab = {
-      id: 'quit',
-      type: 'terminal',
-      terminal: 'term-quit',
-      incarnationId: 'inc',
-      launchAgent: 'codex',
-      presentation: negative
-    }
-    const active: { current?: ReturnType<typeof useMobileNativeChatActiveResolution> } = {}
-    function Harness(): null {
-      active.current = useMobileNativeChatActiveResolution({
-        client,
-        connState: 'connected',
-        hostId: 'h',
-        worktreeId: 'w',
-        activeSessionTab: tab,
-        activeSessionTabId: tab.id,
-        activeHandleRef: useRef(tab.terminal),
-        nativeChatTranscriptIsLocalReadable: true
-      })
-      return null
-    }
-    acceptMobilePresentationFrame(client, [tab], 'w')
-    await act(async () => {
-      renderer = create(createElement(Harness))
-    })
-    expect(active.current?.showNativeChat).toBe(false)
-    expect(updateSessionViewOverride).toHaveBeenLastCalledWith('h', 'w', 'quit', 'terminal')
-    const writes = vi.mocked(updateSessionViewOverride).mock.calls.length
-    await act(async () => {
+  it.each(['snapshot', 'authenticated-read'])(
+    'applies %s quit to real preferences and keeps current manual choices',
+    async (source) => {
+      vi.mocked(loadDefaultSessionView).mockResolvedValue('chat')
+      let generation = 1
+      const physical = createFakeRpcClient({ getGeneration: () => generation })
+      const client: RpcClient = {
+        ...physical,
+        sendRequest: vi.fn<RpcClient['sendRequest']>(async () => ({
+          id: 'inspect',
+          ok: true,
+          result: { process: { presentation: negative } }
+        }))
+      }
+      const negative = {
+        support: 'supported' as const,
+        incarnationId: 'inc',
+        version: 1,
+        state: 'not-in-front' as const
+      }
+      const tab = {
+        id: 'quit',
+        type: 'terminal',
+        terminal: 'term-quit',
+        incarnationId: 'inc',
+        launchAgent: 'codex',
+        presentation: source === 'snapshot' ? negative : undefined
+      }
+      const active: { current?: ReturnType<typeof useMobileNativeChatActiveResolution> } = {}
+      let renders = 0
+      function Harness(): null {
+        renders++
+        active.current = useMobileNativeChatActiveResolution({
+          client,
+          connState: 'connected',
+          hostId: 'h',
+          worktreeId: 'w',
+          activeSessionTab: tab,
+          activeSessionTabId: tab.id,
+          activeHandleRef: useRef(tab.terminal),
+          nativeChatTranscriptIsLocalReadable: true
+        })
+        return null
+      }
       acceptMobilePresentationFrame(client, [tab], 'w')
-      acceptMobilePresentationFrame(
-        client,
-        [{ ...tab, presentation: { ...negative, version: 2, state: 'agent-in-front' } }],
-        'w'
-      )
-    })
-    expect(active.current?.showNativeChat).toBe(false)
-    expect(updateSessionViewOverride).toHaveBeenCalledTimes(writes)
-    await act(async () => {
-      active.current!.setTabView('quit', 'chat')
-    })
-    expect(active.current?.showNativeChat).toBe(true)
-    await act(async () => {
+      if (source === 'authenticated-read') {
+        await readMobilePresentation(client, tab.terminal, tab.incarnationId)
+      }
+      await act(async () => {
+        renderer = create(createElement(Harness))
+      })
+      const settled = renders
+      for (const otherClient of [client, createFakeRpcClient()]) {
+        await act(async () => {
+          acceptMobilePresentationFrame(
+            otherClient,
+            [{ ...tab, terminal: 'unrelated', presentation: negative }],
+            'other-workspace'
+          )
+        })
+        expect(renders).toBe(settled)
+      }
+      expect(active.current?.showNativeChat).toBe(false)
+      expect(updateSessionViewOverride).toHaveBeenLastCalledWith('h', 'w', 'quit', 'terminal')
+      const writes = vi.mocked(updateSessionViewOverride).mock.calls.length
+      await act(async () => {
+        acceptMobilePresentationFrame(client, [tab], 'w')
+        acceptMobilePresentationFrame(
+          client,
+          [{ ...tab, presentation: { ...negative, version: 2, state: 'agent-in-front' } }],
+          'w'
+        )
+      })
+      expect(active.current?.showNativeChat).toBe(false)
+      expect(updateSessionViewOverride).toHaveBeenCalledTimes(writes)
+      await act(async () => {
+        active.current!.setTabView('quit', 'chat')
+      })
+      expect(active.current?.showNativeChat).toBe(true)
+      await act(async () => {
+        retractMobilePresentations(client)
+      })
+      // The still-rendered tab carries version-one shell; it cannot revive a retracted release.
+      expect(active.current?.showNativeChat).toBe(true)
+      expect(updateSessionViewOverride).toHaveBeenCalledTimes(writes + 1)
+      await act(async () => {
+        acceptMobilePresentationFrame(
+          client,
+          [{ ...tab, presentation: { ...negative, version: 3 } }],
+          'w'
+        )
+      })
+      expect(active.current?.showNativeChat).toBe(false)
+      expect(updateSessionViewOverride).toHaveBeenLastCalledWith('h', 'w', 'quit', 'terminal')
+      for (const state of ['agent-in-front', 'not-in-front'] as const) {
+        await act(async () => {
+          createMobilePresentationSource(client, 'w').apply([{ ...tab, presentation: undefined }])
+        })
+        await act(async () => {
+          active.current!.setTabView('quit', 'chat')
+        })
+        let finish!: (value: Awaited<ReturnType<RpcClient['sendRequest']>>) => void
+        vi.mocked(client.sendRequest).mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              finish = resolve
+            })
+        )
+        const stale = readMobilePresentation(client, tab.terminal, 'inc')
+        await act(async () => {
+          physical.pushState('reconnecting')
+          generation++
+          physical.pushState('connected')
+        })
+        expect(active.current?.showNativeChat).toBe(true)
+        vi.mocked(client.sendRequest).mockResolvedValueOnce({
+          id: 'new',
+          ok: true,
+          _meta: { runtimeId: `runtime-${generation}` },
+          result: { process: { presentation: { ...negative, state } } }
+        })
+        await act(async () => {
+          await readMobilePresentation(client, tab.terminal, 'inc')
+          finish({
+            id: 'old',
+            ok: true,
+            result: {
+              process: { presentation: { ...negative, version: 99, state: 'not-in-front' } }
+            }
+          })
+          await stale
+        })
+        expect(active.current?.showNativeChat).toBe(state === 'agent-in-front')
+        const feed = createMobilePresentationSource(client, 'w')
+        await act(async () => {
+          feed.apply([{ ...tab, presentation: undefined }])
+        })
+        await act(async () => {
+          active.current!.setTabView('quit', 'chat')
+        })
+        expect(active.current?.showNativeChat).toBe(true)
+        vi.mocked(client.sendRequest).mockResolvedValueOnce({
+          id: 'none',
+          ok: true,
+          result: { process: {} }
+        })
+        await act(async () => {
+          await readMobilePresentation(client, tab.terminal, 'inc')
+        })
+        expect(active.current?.showNativeChat).toBe(true)
+        feed.dispose()
+      }
+      act(() => renderer?.unmount())
+      renderer = null
       retractMobilePresentations(client)
-    })
-    // The still-rendered tab carries version-one shell; it cannot revive a retracted release.
-    expect(active.current?.showNativeChat).toBe(true)
-    expect(updateSessionViewOverride).toHaveBeenCalledTimes(writes + 1)
-    await act(async () => {
-      acceptMobilePresentationFrame(
-        client,
-        [{ ...tab, presentation: { ...negative, version: 3 } }],
-        'w'
-      )
-    })
-    expect(active.current?.showNativeChat).toBe(false)
-    expect(updateSessionViewOverride).toHaveBeenLastCalledWith('h', 'w', 'quit', 'terminal')
-    act(() => renderer?.unmount())
-    renderer = null
-    retractMobilePresentations(client)
-  })
+    }
+  )
+
+  it.each(['feed', 'direct'])(
+    'persists current logical handoff and dormant %s re-entry without a React reconnect',
+    async (channel) => {
+      vi.mocked(loadDefaultSessionView).mockResolvedValue('chat')
+      const first = createFakeRpcClient()
+      const logical = createStableLogicalRpcClient(first, 'relay')
+      const client = scopeRpcClientToExecutionHost(logical, 'runtime:host')
+      const negative = {
+        support: 'supported' as const,
+        incarnationId: 'inc',
+        version: 1,
+        state: 'not-in-front' as const
+      }
+      const tab = {
+        id: 'quit',
+        type: 'terminal',
+        terminal: 'term',
+        incarnationId: 'inc',
+        launchAgent: 'codex'
+      }
+      let active: ReturnType<typeof useMobileNativeChatActiveResolution> | undefined
+      function Harness() {
+        active = useMobileNativeChatActiveResolution({
+          client,
+          connState: 'connected',
+          hostId: 'h',
+          worktreeId: 'w',
+          activeSessionTab: tab,
+          activeSessionTabId: tab.id,
+          activeHandleRef: useRef(tab.terminal),
+          nativeChatTranscriptIsLocalReadable: true
+        })
+        return null
+      }
+      const makeController = () =>
+        new MobileSessionTabsStreamHealth<{ tabs: unknown[] }, unknown>({
+          client,
+          scope: 'w',
+          apply: (result) => ({ accepted: true, effectiveTabs: result.tabs }),
+          consumeAccepted: vi.fn(),
+          hasRecoveryNeed: () => false
+        })
+      let feed = makeController()
+      let sub = feed.beginSubscription()
+      let stop = client.subscribe('session.tabs.subscribe', {}, sub.listener)
+      await act(async () => {
+        renderer = create(createElement(Harness))
+      })
+      const second = createFakeRpcClient()
+      await act(async () => {
+        await logical.migrateTo(second, 'lan')
+      })
+      feed.setReconciliationActive(true)
+      await act(async () => {
+        second.streams[0]!.emit(
+          {
+            type: 'snapshot',
+            tabs: [{ ...tab, presentation: { ...negative, state: 'agent-in-front' } }]
+          },
+          { runtimeId: 'two' }
+        )
+        second.requests
+          .find((r) => r.method === 'session.tabs.list')!
+          .resolve({
+            id: 'list',
+            ok: true,
+            result: { tabs: [{ ...tab, presentation: { ...negative, state: 'agent-in-front' } }] },
+            _meta: { runtimeId: 'two' }
+          })
+      })
+      await act(async () => {
+        second.streams[0]!.emit(
+          { type: 'updated', tabs: [{ ...tab, presentation: { ...negative, version: 2 } }] },
+          { runtimeId: 'two' }
+        )
+      })
+      expect(active?.showNativeChat).toBe(false)
+      expect(updateSessionViewOverride).toHaveBeenLastCalledWith('h', 'w', tab.id, 'terminal')
+      const requests = second.requests.length
+      expect(feed.poll()).toBeNull()
+      expect(second.requests).toHaveLength(requests)
+      await act(async () => {
+        second.streams[0]!.emit({
+          type: 'updated',
+          tabs: [{ ...tab, presentation: { ...negative, version: 3, state: 'agent-in-front' } }]
+        })
+      })
+      expect(active?.showNativeChat).toBe(false) // Positive does not select Chat.
+      await act(async () => {
+        active!.setTabView(tab.id, 'chat')
+      })
+      expect(active?.showNativeChat).toBe(true)
+      await act(async () => {
+        first.streams[0]!.emit(
+          { type: 'updated', tabs: [{ ...tab, presentation: { ...negative, version: 99 } }] },
+          { runtimeId: 'one' }
+        )
+      })
+      expect(active?.showNativeChat).toBe(true)
+      for (const state of ['not-in-front', 'agent-in-front'] as const) {
+        await act(async () => {
+          second.streams[0]!.emit(
+            { type: 'updated', tabs: [{ ...tab, presentation: { ...negative, state } }] },
+            { runtimeId: `replacement-${state}` }
+          )
+        })
+        if (state === 'not-in-front') {
+          expect(active?.showNativeChat).toBe(false)
+        }
+        await act(async () => {
+          active!.setTabView(tab.id, 'chat')
+        })
+        expect(active?.showNativeChat).toBe(state === 'agent-in-front')
+      }
+      await act(async () => {
+        second.streams[0]!.emit({ type: 'updated', tabs: [tab] })
+      })
+      expect(active?.showNativeChat).toBe(true)
+      await act(async () => {
+        renderer?.unmount()
+        renderer = null
+        feed.dispose()
+        stop()
+        retractMobilePresentations(client)
+      })
+      const third = createFakeRpcClient()
+      await logical.migrateTo(third, 'relay')
+      expect(scopeRpcClientToExecutionHost(logical, 'runtime:host')).toBe(client)
+      feed = makeController()
+      sub = feed.beginSubscription()
+      stop = client.subscribe('session.tabs.subscribe', {}, sub.listener)
+      await act(async () => {
+        renderer = create(createElement(Harness))
+      })
+      await act(async () => {
+        if (channel === 'feed') {
+          third.streams[0]!.emit({ type: 'updated', tabs: [{ ...tab, presentation: negative }] })
+        } else {
+          const read = readMobilePresentation(client, tab.terminal, 'inc')
+          third.requests
+            .at(-1)!
+            .resolve({ id: 'direct', ok: true, result: { process: { presentation: negative } } })
+          await read
+        }
+      })
+      expect(active?.showNativeChat).toBe(false)
+      expect(updateSessionViewOverride).toHaveBeenLastCalledWith('h', 'w', tab.id, 'terminal')
+      await act(async () => {
+        renderer?.unmount()
+        renderer = null
+        feed.dispose()
+        stop()
+        retractMobilePresentations(client)
+      })
+      logical.close()
+      expect(third.stateListeners()).toBe(0)
+    }
+  )
 
   it('follows the default when a tab has no override', async () => {
     await mount({ defaultView: 'terminal' })

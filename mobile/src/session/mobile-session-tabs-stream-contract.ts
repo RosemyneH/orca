@@ -1,5 +1,5 @@
 import type { RpcClient } from '../transport/rpc-client'
-import type { RpcFailure } from '../transport/types'
+import type { RpcFailure, RpcResponse } from '../transport/types'
 
 export type SessionTabsApplyOutcome<Tab> =
   | { accepted: false }
@@ -41,6 +41,6 @@ export type ControllerOptions<Result, Tab> = {
 }
 
 export type StreamSubscription = {
-  listener: (payload: unknown) => void
+  listener: (payload: unknown, metadata?: RpcResponse['_meta']) => void
   cancel: () => void
 }

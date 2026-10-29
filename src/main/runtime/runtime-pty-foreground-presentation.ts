@@ -28,10 +28,13 @@ export function acceptPtyForegroundPresentation(
   state: TerminalForegroundPresentation | undefined,
   support: 'supported' | 'legacy',
   startedAt: number,
-  evidence?: RemoteForegroundEvidence,
-  publish = true
+  evidence: RemoteForegroundEvidence | undefined,
+  publish: boolean,
+  current: () => boolean,
+  nextVersion: () => number
 ) {
   if (
+    !current() ||
     !pty ||
     !incarnation ||
     deps.getPty(pty.ptyId) !== pty ||
@@ -65,6 +68,7 @@ export function acceptPtyForegroundPresentation(
   }
   const commit = (effective: typeof state, notify = true) => {
     if (
+      !current() ||
       deps.getPty(pty.ptyId) !== pty ||
       deps.getController() !== controller ||
       pty.incarnationId !== incarnation
@@ -80,7 +84,7 @@ export function acceptPtyForegroundPresentation(
         state: effective,
         support,
         incarnationId: incarnation,
-        version: (pty.presentation?.version ?? 0) + 1
+        version: nextVersion()
       }
       if (notify) {
         deps.touchSnapshot(pty.ptyId)
@@ -88,20 +92,15 @@ export function acceptPtyForegroundPresentation(
     }
     return pty.presentation
   }
-  return commit(
-    pty.pendingAgentLaunch
-      ? pty.pendingAgentLaunch.presentation(state, () => {
-          commit(state)
-        })
-      : state,
-    publish
-  )
+  return commit(state, publish)
 }
 
 export async function confirmPtyForegroundPresentation(
   deps: ForegroundPresentationDependencies,
   sourceAdmissions: ForegroundSourceAdmissions,
-  ptyId: string
+  ptyId: string,
+  current: () => boolean,
+  nextVersion: () => number
 ) {
   const controller = deps.getController()
   const pty = deps.getPty(ptyId)
@@ -124,7 +123,11 @@ export async function confirmPtyForegroundPresentation(
           incarnation,
           state ?? undefined,
           state === null ? 'legacy' : 'supported',
-          startedAt
+          startedAt,
+          undefined,
+          true,
+          current,
+          nextVersion
         )
       : undefined
   return { foregroundProcess, presentation }
@@ -133,6 +136,7 @@ export async function confirmPtyForegroundPresentation(
 export type ForegroundInspectionEntry = {
   controller: RuntimePtyController
   options?: PtyProcessInspectionOptions
+  lease: object
   incarnation: string | null | undefined
   promise: Promise<PtyProcessInspection>
 }

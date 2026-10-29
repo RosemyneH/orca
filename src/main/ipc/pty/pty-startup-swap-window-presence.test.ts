@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { makeDeferred } from '../pty-ipc-test-constants'
 import { setupPtyIpcSuite } from '../pty-ipc-test-harness'
 import { registerPtyHandlers } from './register-handlers'
+import type { RuntimePtyController } from '../../runtime/runtime-pty-controller-contract'
 
 vi.mock('electron', () => import('../pty-ipc-mock-registry').then((m) => m.electronModuleMock()))
 vi.mock('fs', () => import('../pty-ipc-mock-registry').then((m) => m.fsModuleMock()))
@@ -177,13 +178,15 @@ describe('registerPtyHandlers daemon-swap-window presence', () => {
 
   it('keeps the in-process provider authoritative when no startup barrier is configured', async () => {
     // Headless hosts install their sole provider before registration; its absence is authoritative (#12393).
-    let controller: { hasPty: (ptyId: string) => boolean | null } | undefined
+    let controller: RuntimePtyController | undefined
+    const inspectPtyForegroundProcess = vi.fn((id: string) => controller?.inspectProcess?.(id))
     registerPtyHandlers(
       mainWindow as never,
       {
-        setPtyController: vi.fn((next) => {
+        setPtyController: vi.fn((next: RuntimePtyController) => {
           controller = next
         }),
+        inspectPtyForegroundProcess,
         registerPty: vi.fn(),
         onPtySpawned: vi.fn(),
         onPtyExit: vi.fn(),
@@ -191,7 +194,7 @@ describe('registerPtyHandlers daemon-swap-window presence', () => {
       } as never
     )
 
-    expect(controller?.hasPty('never-spawned-pty')).toBe(false)
+    expect(controller?.hasPty?.('never-spawned-pty')).toBe(false)
     await expect(handlers.get('pty:hasPty')!(null, { id: 'never-spawned-pty' })).resolves.toBe(
       false
     )
@@ -203,5 +206,10 @@ describe('registerPtyHandlers daemon-swap-window presence', () => {
       verdict: 'unverifiable',
       reason: 'terminal_gone'
     })
+    await expect(controller?.inspectProcess?.('never-spawned-pty')).rejects.toThrow('terminal_gone')
+    inspectPtyForegroundProcess.mockRejectedValueOnce(new Error('unexpected inspection failure'))
+    await expect(
+      handlers.get('pty:inspectProcess')!(null, { id: 'never-spawned-pty' })
+    ).rejects.toThrow('unexpected inspection failure')
   })
 })

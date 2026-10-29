@@ -1,14 +1,25 @@
-// @vitest-environment happy-dom
 import {
+  installInputMarkerLayoutFixture,
+  installSshPresentationInspectionFixture,
+  INSPECTION_LEAF_ID as LEAF_ID,
+  INSPECTION_PANE_KEY as PANE_KEY,
+  makeByteOversizedTerminalInput,
   createRuntimeTerminalInspectionFixtures,
   liveEvidence
 } from './runtime-terminal-inspection-test-fixtures'
+import {
+  publicRuntimeEnvironment,
+  connectedRuntimeStatus
+} from './paired-runtime-environment-test-fixture'
+// @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
 import {
   inspectDesktopShownTerminal,
   inspectRuntimeTerminalProcess,
   sendRuntimePtyInput
 } from './runtime-terminal-inspection'
+import { clearRuntimeCompatibilityCacheForTests } from './runtime-rpc-client'
+import { desktopPresentationSnapshot } from './terminal-foreground-presentation'
 import { recordRuntimeTerminalInputForPtyId } from './runtime-terminal-input-recording'
 import { sendRuntimePtyInputVerified } from './runtime-terminal-verified-input'
 import { CLIPBOARD_TEXT_MEASURE_YIELD_CODE_UNITS } from '../../../shared/clipboard-text'
@@ -23,12 +34,6 @@ import {
   type ClientOnlyUnverifiableInspection
 } from '../../../shared/terminal-process-inspection'
 
-const LEAF_ID = '11111111-1111-4111-8111-111111111111'
-const PANE_KEY = `tab-1:${LEAF_ID}`
-function makeByteOversizedTerminalInput(): string {
-  return '😀'.repeat(Math.floor(TERMINAL_INPUT_MAX_BYTES / 4) + 1)
-}
-
 describe('runtime terminal owner routing', () => {
   const {
     runtimeCall,
@@ -40,17 +45,7 @@ describe('runtime terminal owner routing', () => {
     localInspect
   } = createRuntimeTerminalInspectionFixtures()
   it('records runtime input markers even before hibernation is enabled', () => {
-    useAppStore.setState({
-      settings: { experimentalAgentHibernation: false } as never,
-      terminalLayoutsByTabId: {
-        'tab-1': {
-          root: { type: 'leaf', leafId: LEAF_ID },
-          activeLeafId: LEAF_ID,
-          expandedLeafId: null,
-          ptyIdsByLeafId: { [LEAF_ID]: 'local-pty' }
-        }
-      }
-    })
+    installInputMarkerLayoutFixture()
 
     recordRuntimeTerminalInputForPtyId('local-pty', 123)
 
@@ -133,7 +128,7 @@ describe('runtime terminal owner routing', () => {
   })
 
   it.each([true, false])(
-    'qualified shown read admits new SSH capability=%s once',
+    'qualified shown read consumes owning host capability=%s without POSIX evidence',
     async (supported) => {
       const id = `remote:env-show-${supported}@@terminal-shown`
       runtimeTransportCall.mockImplementation((args: RuntimeEnvironmentCallRequest) => {
@@ -152,7 +147,6 @@ describe('runtime terminal owner routing', () => {
           process: {
             foregroundProcess: 'bash',
             hasChildProcesses: true,
-            foregroundProcessEvidence: liveEvidence('terminal-shown'),
             presentation: {
               support: 'supported',
               incarnationId: 'incarnation-1',
@@ -162,11 +156,112 @@ describe('runtime terminal owner routing', () => {
           }
         }
       })
+      useAppStore.setState({
+        ptyIdsByTabId: { shown: [id] },
+        runtimeEnvironments: [publicRuntimeEnvironment({ id: `env-show-${supported}` })],
+        runtimeStatusByEnvironmentId: new Map([
+          [`env-show-${supported}`, connectedRuntimeStatus('remote-runtime', 0)]
+        ])
+      })
       const first = inspectDesktopShownTerminal(id)
       expect(inspectDesktopShownTerminal(id)).toBe(first)
       await first
       expect(runtimeCall).toHaveBeenCalledTimes(supported ? 1 : 0)
       expect(localInspect).not.toHaveBeenCalled()
+      if (supported) {
+        clearRuntimeCompatibilityCacheForTests()
+        let releaseCapability!: () => void
+        runtimeTransportCall.mockImplementation((args: RuntimeEnvironmentCallRequest) => {
+          const status = createCompatibleRuntimeStatusResponseIfNeeded(args)
+          return status
+            ? new Promise((resolve) => {
+                releaseCapability = () => resolve(status)
+              })
+            : runtimeCall(args)
+        })
+        const old = inspectDesktopShownTerminal(id)
+        useAppStore
+          .getState()
+          .setRuntimeEnvironmentStatus('env-show-true', { status: null, checkedAt: 2 })
+        useAppStore.setState({
+          runtimeStatusByEnvironmentId: new Map([
+            ['env-show-true', connectedRuntimeStatus('remote-runtime', 0)]
+          ])
+        })
+        const current = inspectDesktopShownTerminal(id)
+        expect(current).not.toBe(old)
+        let releaseInspection!: () => void
+        runtimeCall.mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              releaseInspection = () =>
+                resolve({
+                  ok: true,
+                  result: {
+                    process: {
+                      foregroundProcess: 'codex',
+                      hasChildProcesses: true,
+                      presentation: {
+                        support: 'supported',
+                        incarnationId: 'incarnation-1',
+                        version: 1,
+                        state: 'agent-in-front'
+                      }
+                    }
+                  }
+                })
+            })
+        )
+        releaseCapability()
+        await old
+        await vi.waitFor(() => expect(runtimeCall).toHaveBeenCalledTimes(2))
+        expect(inspectDesktopShownTerminal(id)).toBe(current)
+        releaseInspection()
+        await current
+        expect(desktopPresentationSnapshot(id)?.state).toBe('agent-in-front')
+      }
+    }
+  )
+
+  it.each(['local-null', 'paired-null', 'native-windows'])(
+    'preserves compatibility before presentation delivery: %s',
+    async (flow) => {
+      const remote = flow !== 'local-null'
+      const id = remote ? `remote:compat-${flow}@@terminal` : 'compat-null'
+      useAppStore.setState({
+        ptyIdsByTabId: { compatibility: [id] },
+        runtimeEnvironments: [publicRuntimeEnvironment({ id: `compat-${flow}` })],
+        runtimeStatusByEnvironmentId: new Map([
+          [`compat-${flow}`, connectedRuntimeStatus('remote-runtime', 0)]
+        ])
+      })
+      const presentation = {
+        support: 'supported',
+        incarnationId: 'inc',
+        version: 1,
+        state: 'not-in-front'
+      } as const
+      localInspect.mockResolvedValue(null)
+      runtimeCall.mockResolvedValue({
+        ok: true,
+        result: {
+          process:
+            flow === 'paired-null'
+              ? null
+              : {
+                  foregroundProcess: 'powershell',
+                  hasChildProcesses: false,
+                  presentation
+                }
+        }
+      })
+      await expect(inspectRuntimeTerminalProcess(id)).resolves.toMatchObject({
+        verdict: 'unverifiable',
+        reason: remote ? 'old_host' : 'terminal_gone'
+      })
+      expect(desktopPresentationSnapshot(id)).toEqual(
+        flow === 'native-windows' ? presentation : undefined
+      )
     }
   )
 
@@ -188,19 +283,56 @@ describe('runtime terminal owner routing', () => {
   })
 
   it('uses strict main-process inspection for a direct SSH PTY', async () => {
+    const { id, presentation, authorityB } = installSshPresentationInspectionFixture()
     localInspect.mockResolvedValue({
+      presentation,
       foregroundProcess: 'codex',
       hasChildProcesses: true,
       foregroundProcessEvidence: liveEvidence('pty-1', 'codex')
     })
 
-    await expect(inspectRuntimeTerminalProcess('ssh:host@@pty-1')).resolves.toMatchObject({
+    await expect(
+      inspectRuntimeTerminalProcess(id, { expectedIncarnationId: 'incarnation-1' })
+    ).resolves.toMatchObject({
       foregroundProcess: 'codex',
       hasChildProcesses: true
     })
-    expect(localInspect).toHaveBeenCalledExactlyOnceWith('ssh:host@@pty-1')
+    expect(localInspect).toHaveBeenCalledExactlyOnceWith(id, {
+      expectedIncarnationId: 'incarnation-1'
+    })
     expect(localForeground).not.toHaveBeenCalled()
     expect(localHasChildren).not.toHaveBeenCalled()
+    expect(desktopPresentationSnapshot(id)).toEqual(presentation)
+    let finish!: () => void
+    const now = vi.spyOn(performance, 'now').mockReturnValue(1_000)
+    localInspect.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = () =>
+            resolve({
+              foregroundProcess: 'zsh',
+              hasChildProcesses: true,
+              presentation: { ...presentation, version: 2, state: 'not-in-front' },
+              foregroundProcessEvidence: { ...liveEvidence('pty-1'), observationEpoch: 2 }
+            })
+        })
+    )
+    const delayed = inspectRuntimeTerminalProcess(id, { expectedIncarnationId: 'incarnation-1' })
+    now.mockReturnValue(4_001)
+    finish()
+    await delayed
+    now.mockRestore()
+    expect(desktopPresentationSnapshot(id)).toEqual(presentation)
+    const stale = inspectRuntimeTerminalProcess(id, { expectedIncarnationId: 'incarnation-1' })
+    useAppStore.setState({
+      sshConnectionStates: new Map([['host', authorityB]])
+    })
+    await stale
+    expect(desktopPresentationSnapshot(id)).toBeUndefined()
+    await inspectRuntimeTerminalProcess(id, { expectedIncarnationId: 'incarnation-1' })
+    expect(desktopPresentationSnapshot(id)).toEqual(presentation)
+    useAppStore.setState({ sshTargetGenerations: new Map() })
+    expect(desktopPresentationSnapshot(id)).toBeUndefined()
   })
 
   it('maps an old direct SSH host to client-only unverifiable', async () => {
@@ -268,11 +400,35 @@ describe('runtime terminal owner routing', () => {
     expect(result).not.toHaveProperty('foregroundProcessEvidence')
   })
 
-  it('still throws an unclassified programming error', async () => {
+  it('still throws an unclassified programming error and withdraws its current authority', async () => {
+    const id = 'remote:env-1@@terminal-bug'
+    useAppStore.setState({
+      ptyIdsByTabId: { bug: [id] },
+      runtimeEnvironments: [publicRuntimeEnvironment({ id: 'env-1' })],
+      runtimeStatusByEnvironmentId: new Map([['env-1', connectedRuntimeStatus('runtime-1', 0)]])
+    })
+    runtimeCall.mockResolvedValueOnce({
+      ok: true,
+      result: {
+        process: {
+          foregroundProcess: 'powershell',
+          hasChildProcesses: false,
+          presentation: {
+            support: 'supported',
+            incarnationId: 'inc',
+            version: 1,
+            state: 'not-in-front'
+          }
+        }
+      }
+    })
+    await inspectRuntimeTerminalProcess(id)
+    expect(desktopPresentationSnapshot(id)?.state).toBe('not-in-front')
     runtimeCall.mockRejectedValueOnce(new Error('inspection invariant violated'))
     await expect(inspectRuntimeTerminalProcess('remote:env-1@@terminal-bug')).rejects.toThrow(
       'inspection invariant violated'
     )
+    expect(desktopPresentationSnapshot(id)).toBeUndefined()
   })
 
   it('records accepted fire-and-forget runtime input against the owning pane key', async () => {

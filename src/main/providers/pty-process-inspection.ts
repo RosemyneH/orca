@@ -48,10 +48,11 @@ export async function inspectPtyProviderProcess(
 export async function inspectPtyProviderProcessForRenderer(
   provider: IPtyProvider,
   ptyId: string,
-  options?: PtyProcessInspectionOptions
+  options?: PtyProcessInspectionOptions,
+  inspect = inspectPtyProviderProcess
 ): Promise<PtyProcessInspection> {
   try {
-    return await inspectPtyProviderProcess(provider, ptyId, options)
+    return await inspect(provider, ptyId, options)
   } catch (error) {
     const reason = classifyTerminalProcessInspectionFailure(error)
     if (reason) {

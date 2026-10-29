@@ -218,7 +218,10 @@ describe('MobileRelayRpcStreams cancel fencing', () => {
     await Promise.resolve()
 
     expect(streams.handleResponse(readyReply('stream-1'))).toBe(true)
-    expect(listener).toHaveBeenCalledExactlyOnceWith({ type: 'ready', subscriptionId: 'sub-1' })
+    expect(listener).toHaveBeenCalledExactlyOnceWith(
+      { type: 'ready', subscriptionId: 'sub-1' },
+      { runtimeId: 'runtime-1' }
+    )
   })
 
   it('releases, without delivering, a ready reply that lands after the caller cancelled', async () => {

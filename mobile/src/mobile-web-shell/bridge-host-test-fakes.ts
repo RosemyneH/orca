@@ -14,7 +14,7 @@ export type SentRequest = {
 export type OpenStream = {
   method: string
   params: unknown
-  emit: (payload: unknown) => void
+  emit: (payload: unknown, metadata?: RpcResponse['_meta']) => void
   emitBinary: ((frame: BrowserScreencastFrame) => void) | null
   envelope: RpcEnvelopeFields | undefined
   unsubscribes: number

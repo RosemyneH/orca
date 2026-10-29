@@ -36,6 +36,10 @@ export class VisibilityResumeCoordinator {
 
   constructor(private readonly options: VisibilityResumeCoordinatorOptions) {}
 
+  dispose(): void {
+    this.batch = null
+  }
+
   recordSnapshotReceipt(
     environmentId: string,
     snapshot: RuntimeMobileSessionTabsResult,

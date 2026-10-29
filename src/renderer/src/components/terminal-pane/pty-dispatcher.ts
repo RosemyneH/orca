@@ -1,3 +1,6 @@
+import { ptyDataMeta } from './pty-data-meta'
+export type { PtyDataMeta } from './pty-data-meta'
+import { retireDesktopTerminalObservation } from '../../runtime/desktop-terminal-observation-owner'
 import { TERMINAL_SCROLLBACK_SESSION_BUFFER_BYTE_LIMIT } from '../../../../shared/terminal-scrollback-limits'
 import {
   clearProcessedPtyCharTotal,
@@ -46,17 +49,6 @@ export {
 } from './pty-shutdown-data-suspension'
 
 // One IPC listener per channel routes by PTY ID, avoiding MaxListenersExceededWarning across many panes.
-
-export type PtyDataMeta = {
-  seq?: number
-  rawLength?: number
-  transformed?: boolean
-  background?: boolean
-  /** Main dropped this PTY's buffered output at the pending cap; repaint from the main-owned snapshot, not the live stream. */
-  droppedOutput?: boolean
-  /** Escape main's dropped bytes left open where this chunk begins; only an abandoned restore uses it. */
-  gapEscapeState?: string
-}
 
 /** Sidecar PTY-data observers, invoked AFTER the primary handler so a side-effect-only watcher can't delay xterm rendering. */
 /** Per-PTY replay handlers on a dedicated pty:replay channel so the renderer can engage the replay guard and suppress xterm auto-replies. */
@@ -120,31 +112,7 @@ function handleDispatchedPtyData(payload: {
   droppedOutput?: boolean
   gapEscapeState?: string
 }): void {
-  let meta: PtyDataMeta | undefined
-  if (typeof payload.seq === 'number') {
-    meta ??= {}
-    meta.seq = payload.seq
-  }
-  if (typeof payload.rawLength === 'number') {
-    meta ??= {}
-    meta.rawLength = payload.rawLength
-  }
-  if (payload.transformed === true) {
-    meta ??= {}
-    meta.transformed = true
-  }
-  if (payload.background === true) {
-    meta ??= {}
-    meta.background = true
-  }
-  if (payload.droppedOutput === true) {
-    meta ??= {}
-    meta.droppedOutput = true
-  }
-  if (typeof payload.gapEscapeState === 'string' && payload.gapEscapeState.length > 0) {
-    meta ??= {}
-    meta.gapEscapeState = payload.gapEscapeState
-  }
+  const meta = ptyDataMeta(payload)
   const chars = payload.rawLength ?? payload.data.length
   const dispatch = (): void => {
     if (isPtyDataHandlerShutdownPending(payload.id)) {
@@ -174,6 +142,7 @@ function handleDispatchedPtyData(payload: {
 
 function attachPtySecondaryPushListeners(unsubscribes: (() => void)[]): void {
   const unsubscribeWriteUnavailable = window.api.pty.onWriteUnavailable?.((payload) => {
+    retireDesktopTerminalObservation(payload.id)
     ptyWriteUnavailableHandlers.get(payload.id)?.()
   })
   if (unsubscribeWriteUnavailable) {
@@ -189,6 +158,7 @@ function attachPtySecondaryPushListeners(unsubscribes: (() => void)[]): void {
   )
   unsubscribes.push(
     window.api.pty.onExit((payload) => {
+      retireDesktopTerminalObservation(payload.id, payload.incarnationId)
       if (payload.preserveRendererBinding === true) {
         // Why: host-initiated remote sleep has no requester transaction in this renderer; classify its ordered exit before pane cleanup runs.
         markCommittedPtyShutdowns([payload.id])

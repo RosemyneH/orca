@@ -1,68 +1,21 @@
+import {
+  unsubscribeSlot,
+  buildParamsUnsubscribe,
+  type StreamRecord,
+  type StreamUnsubscribe
+} from './mobile-relay-stream-unsubscribe'
 import { decodeBrowserScreencastFrame } from './browser-screencast-protocol'
 import {
   handleTerminalBinaryFrame,
   type TerminalSnapshotState
 } from './rpc-client-terminal-binary-frame'
 import { TerminalUnreadableFrameResets } from './terminal-unreadable-frame-resets'
-import {
-  buildStreamUnsubscribe,
-  buildTerminalUnsubscribeParams,
-  updateTerminalSubscriptionViewport
-} from './rpc-client-terminal-subscription'
+import { updateTerminalSubscriptionViewport } from './rpc-client-terminal-subscription'
 import { buildReadyStreamUnsubscribe, isReadyIdStream } from './rpc-client-server-subscription'
 import { isStreamingOpenerReply } from './rpc-acceptance-policies'
 import type { RpcClient } from './rpc-client'
 import type { RpcEnvelopeFields, RpcRequestFrame } from './rpc-envelope-fields'
 import type { RpcResponse, RpcSuccess } from './types'
-
-type StreamRecord = {
-  method: string
-  params: unknown
-  envelope?: RpcEnvelopeFields
-  listener: (result: unknown) => void
-  onBinaryFrame?: Parameters<RpcClient['subscribe']>[3] extends
-    | { onBinaryFrame?: infer Listener }
-    | undefined
-    ? Listener
-    : never
-  streamIds: Set<number>
-  subscriptionId?: string
-  cancelled: boolean
-  /** Position in this session's send order, or null while unsent. */
-  sendOrder: number | null
-  receivedSnapshot?: boolean
-}
-
-type StreamUnsubscribe = { method: string; params: Record<string, unknown> }
-
-// Include the whole envelope in cleanup-slot identity; sort keys so equivalent routing names the same slot.
-function unsubscribeSlot(
-  { method, params }: StreamUnsubscribe,
-  envelope: RpcEnvelopeFields | undefined
-): string | null {
-  if (!('subscriptionId' in params)) {
-    return null
-  }
-  const client =
-    'client' in params && typeof params.client === 'object' && params.client !== null
-      ? params.client
-      : null
-  const clientId = client && 'id' in client ? client.id : null
-  const routing = envelope ? Object.entries(envelope).sort(([a], [b]) => (a < b ? -1 : 1)) : null
-  return JSON.stringify([method, params.subscriptionId, clientId, routing])
-}
-
-function buildParamsUnsubscribe(
-  method: string,
-  params: unknown,
-  requestId: string
-): StreamUnsubscribe | null {
-  if (method === 'terminal.subscribe') {
-    const unsubscribeParams = buildTerminalUnsubscribeParams(params)
-    return unsubscribeParams ? { method: 'terminal.unsubscribe', params: unsubscribeParams } : null
-  }
-  return buildStreamUnsubscribe(method, params, requestId)
-}
 
 type StreamManagerOptions = {
   nextId: () => string
@@ -88,7 +41,7 @@ export class MobileRelayRpcStreams {
   subscribe(
     method: string,
     params: unknown,
-    listener: (result: unknown) => void,
+    listener: (result: unknown, metadata?: RpcResponse['_meta']) => void,
     subscribeOptions?: Parameters<RpcClient['subscribe']>[3]
   ): () => void {
     const id = this.options.nextId()
@@ -183,12 +136,16 @@ export class MobileRelayRpcStreams {
         this.activeBrowserStream = stream
       }
       if (metadata.type === 'end') {
-        this.finish(response.id, stream, result)
+        this.finish(response.id, stream, result, response._meta)
         return true
       }
     }
     if (!stream.cancelled) {
-      stream.listener(result)
+      if (response._meta) {
+        stream.listener(result, response._meta)
+      } else {
+        stream.listener(result)
+      }
     }
     return true
   }
@@ -319,8 +276,17 @@ export class MobileRelayRpcStreams {
   }
 
   /** Removed first, so the listener's dispose cannot name a host-ended stream. */
-  private finish(id: string, stream: StreamRecord, result: unknown): void {
+  private finish(
+    id: string,
+    stream: StreamRecord,
+    result: unknown,
+    metadata?: RpcResponse['_meta']
+  ): void {
     this.remove(id)
-    stream.listener(result)
+    if (metadata) {
+      stream.listener(result, metadata)
+    } else {
+      stream.listener(result)
+    }
   }
 }

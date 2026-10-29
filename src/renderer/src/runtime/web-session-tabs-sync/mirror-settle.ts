@@ -1,3 +1,4 @@
+import type { DesktopPresentationDelivery } from '../terminal-foreground-presentation'
 import type { RuntimeMobileSessionTabsResult } from '../../../../shared/runtime-types'
 import { getRuntimeEnvironmentConnectionGeneration } from '@/store/slices/runtime-status'
 import { probeHostLiveTerminals } from '../host-live-terminal-probe'
@@ -13,6 +14,7 @@ import type { WebSessionTabsSnapshotDecision } from './tracking-decisions'
 export type HostSessionMirrorSettle = () => void
 
 export type HostSessionMirrorPatchFrame = {
+  presentationSource?: DesktopPresentationDelivery
   source?: RuntimeMobileSessionTabsResult
   environmentId: string
   worktreeId: string
