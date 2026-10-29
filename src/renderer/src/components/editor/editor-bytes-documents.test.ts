@@ -43,7 +43,7 @@ import {
   setEditorBytesDraft,
   sha256Hex
 } from './editor-bytes-documents'
-import { rekeyEditorBytesDocuments } from './editor-bytes-document-boxes'
+import { bytesDocumentBoxes, rekeyEditorBytesDocuments } from './editor-bytes-document-boxes'
 
 // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the save reads only openFiles, markFileDirty and setExternalMutation.
 const getState = () => state as unknown as AppState
@@ -153,6 +153,14 @@ describe('binary custom editor tabs', () => {
     loadEditorBytes('twin', { bytes: new Uint8Array(loaded), fileType: 'xlsx' }, hex(loaded))
     setEditorBytesDraft('twin', edited)
     expect(editorBytesDocument('book')).toBe(edited)
+    // The saving tab closes mid-write; its twin still ends up clean against the written bytes.
+    writeRuntimeFileBytes.mockImplementation(async () => {
+      bytesDocumentBoxes.delete('book')
+      return { ok: true }
+    })
+    await save()
+    expect(state.markFileDirty).toHaveBeenLastCalledWith('twin', false, { written: true })
+    bytesDocumentBoxes.set('book', bytesDocumentBoxes.get('twin')!)
     state.openFiles.pop()
     state.editorBufferIdOf = {}
     state.editorBufferViews = {}

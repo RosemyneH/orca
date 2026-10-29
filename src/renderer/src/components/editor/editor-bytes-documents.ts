@@ -70,21 +70,25 @@ export function loadEditorBytes(
   savedSha256: string
 ): void {
   unsubscribeStore ??= useAppStore.subscribe(dropSettledDrafts)
-  const siblings = editorBufferSiblingViewIds(useAppStore.getState(), fileId)
-  const box =
-    bytesDocumentBoxes.get(fileId) ?? siblings.map((id) => bytesDocumentBoxes.get(id)).find(Boolean)
-  const existing = box?.current
+  const own = bytesDocumentBoxes.get(fileId)
+  if (!own) {
+    const siblings = editorBufferSiblingViewIds(useAppStore.getState(), fileId)
+    const shared = siblings.map((id) => bytesDocumentBoxes.get(id)).find(Boolean)
+    // Why adopt as is: the twin's box is newer than a read that may have started before its save.
+    bytesDocumentBoxes.set(fileId, shared ?? { current: { saved, savedSha256, draft: null } })
+    notify()
+    return
+  }
+  const existing = own.current
   // Why keep the draft's baseline: a later read must not vouch for bytes the edit never saw.
   // Why keep unchanged bytes: a new object resends the document, so an edit in flight conflicts.
-  const keep =
-    existing?.draft ||
-    (existing?.savedSha256 === savedSha256 && existing.saved.fileType === saved.fileType)
-  const current = keep && existing ? existing : { saved, savedSha256, draft: null }
-  if (box) {
-    box.current = current
+  if (
+    !existing.draft &&
+    (existing.savedSha256 !== savedSha256 || existing.saved.fileType !== saved.fileType)
+  ) {
+    own.current = { saved, savedSha256, draft: null }
+    notify()
   }
-  bytesDocumentBoxes.set(fileId, box ?? { current })
-  notify()
 }
 
 export function setEditorBytesDraft(fileId: string, draft: CustomEditorBinaryDocument): void {
@@ -174,14 +178,16 @@ export async function saveEditorBytesDraft(
     return 'blocked-stale'
   }
   const savedSha256 = await sha256Hex(draft.bytes)
-  if (bytesDocumentBoxes.get(file.id) === box) {
+  // Why any holder: the saving tab may have closed while a twin of the same file stays open.
+  const holder = [...bytesDocumentBoxes].find(([, held]) => held === box)?.[0]
+  if (holder !== undefined) {
     // An edit made while the write ran stays unsaved, now against the bytes just written.
     const newer = box.current.draft !== draft ? box.current.draft : null
     box.current = { saved: draft, savedSha256, draft: newer }
     const state = getState()
-    state.markFileDirty(file.id, newer !== null, { written: true })
-    if (state.openFiles.find((tab) => tab.id === file.id)?.externalMutation) {
-      state.setExternalMutation(file.id, null)
+    state.markFileDirty(holder, newer !== null, { written: true })
+    if (state.openFiles.find((tab) => tab.id === holder)?.externalMutation) {
+      state.setExternalMutation(holder, null)
     }
     notify()
   }
