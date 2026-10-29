@@ -140,16 +140,21 @@ function uploadThroughConnection(
   )
 }
 
+async function openLocalFiles(dir: string): Promise<string[]> {
+  const targets = await Promise.allSettled(
+    (await readdir('/proc/self/fd')).map((fd) => readlink(`/proc/self/fd/${fd}`))
+  )
+  return targets.flatMap((target) =>
+    target.status === 'fulfilled' && target.value.startsWith(dir) ? [target.value] : []
+  )
+}
+
 async function expectLocalFilesClosed(dir: string): Promise<void> {
   if (process.platform !== 'linux') {
     return
   }
-  const targets = await Promise.allSettled(
-    (await readdir('/proc/self/fd')).map((fd) => readlink(`/proc/self/fd/${fd}`))
-  )
-  expect(
-    targets.filter((target) => target.status === 'fulfilled' && target.value.startsWith(dir))
-  ).toEqual([])
+  // Linux can list an fd for a few ms after FileHandle.close() resolves; a leaked handle never clears.
+  await vi.waitFor(async () => expect(await openLocalFiles(dir)).toEqual([]), { timeout: 2_000 })
 }
 
 describe('directory upload pipeline', () => {
